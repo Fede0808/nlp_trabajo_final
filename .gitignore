@@ -7,6 +7,20 @@ __pycache__/
 # Notebooks
 .ipynb_checkpoints/
 
+# Data (no se versiona; son archivos grandes/locales)
+data/*
+!data/README.md
+
+# Artifacts / modelos / outputs
+artifacts/
+models/
+runs/
+*.pt
+*.pth
+*.bin
+*.joblib
+*.pkl
+
 # Tooling
 .pytest_cache/
 .mypy_cache/
