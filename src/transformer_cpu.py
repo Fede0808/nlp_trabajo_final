@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from src.property_text_pipeline import COLUMNA_OBJETIVO, COLUMNA_TEXTO_LIMPIO
+from src.property_text_pipeline import COLUMNA_OBJETIVO, COLUMNA_TEXTO_LIMPIO_TRANSFORMER
 
 
 NOMBRE_MODELO_TRANSFORMER = "distilbert-base-multilingual-cased"
@@ -153,7 +153,7 @@ def crear_dataloaders_transformer(
     df_prueba: pd.DataFrame,
     tokenizador,
     etiqueta_a_id: dict[str, int],
-    columna_texto: str = COLUMNA_TEXTO_LIMPIO,
+    columna_texto: str = COLUMNA_TEXTO_LIMPIO_TRANSFORMER,
     columna_objetivo: str = COLUMNA_OBJETIVO,
     batch_size: int = 4,
     longitud_maxima: int = 128,

@@ -31,3 +31,19 @@ runs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.venv_tmp/
+
+# Datasets, corpus y modelos locales pesados
+*.csv
+*.tsv
+*.json
+modelos/
+
+# Caché de Python y Jupyter
+__pycache__/
+.ipynb_checkpoints/

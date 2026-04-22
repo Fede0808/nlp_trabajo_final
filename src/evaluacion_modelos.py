@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+import numpy as np
 import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
@@ -10,6 +11,13 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
 )
 from sklearn.model_selection import StratifiedKFold, cross_validate
+
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+except ImportError:
+    plt = None
+    sns = None
 
 from src.property_text_pipeline import (
     COLUMNA_OBJETIVO,
@@ -80,6 +88,52 @@ def construir_matriz_confusion_tabla(
         index=[f"real_{etiqueta}" for etiqueta in etiquetas_ordenadas],
         columns=[f"pred_{etiqueta}" for etiqueta in etiquetas_ordenadas],
     )
+
+
+def dibujar_matriz_confusion_profesional(
+    etiquetas_reales: Sequence[str],
+    etiquetas_predichas: Sequence[str],
+    etiquetas_ordenadas: Sequence[str],
+    titulo: str = "Matriz de Confusión del Modelo",
+) -> None:
+    """Dibuja una matriz de confusión moderna y profesional con números y porcentajes."""
+    if plt is None or sns is None:
+        print("matplotlib y seaborn son requeridos para visualización")
+        return
+
+    # Calcular matriz de confusión pura
+    cm = confusion_matrix(
+        etiquetas_reales,
+        etiquetas_predichas,
+        labels=list(etiquetas_ordenadas),
+    )
+
+    # Configurar el lienzo
+    plt.figure(figsize=(8, 6))
+    sns.set_theme(style="white", font_scale=1.1)
+
+    # Calcular porcentajes sobre el total
+    cm_porcentajes = cm / np.sum(cm)
+
+    # Armar etiquetas personalizadas (Número + Porcentaje)
+    labels = [f"{v1}\n({v2:.1%})" for v1, v2 in zip(cm.flatten(), cm_porcentajes.flatten())]
+    labels = np.asarray(labels).reshape(cm.shape)
+
+    # Dibujar heatmap moderno
+    ax = sns.heatmap(cm, annot=labels, fmt='', cmap='Blues', cbar=False,
+                     square=True, linewidths=3, linecolor='white')
+
+    # Configurar estética de ejes y títulos
+    ax.set_title(titulo, pad=20, weight='bold', fontsize=16)
+    ax.set_xlabel('Predicción', weight='bold', labelpad=15, fontsize=13)
+    ax.set_ylabel('Valor Real', weight='bold', labelpad=15, fontsize=13)
+
+    # Cambiar etiquetas por nombres reales de clases
+    ax.set_xticklabels(etiquetas_ordenadas)
+    ax.set_yticklabels(etiquetas_ordenadas, rotation=0)
+
+    plt.tight_layout()
+    plt.show()
 
 
 def evaluar_svm_con_validacion_cruzada(
