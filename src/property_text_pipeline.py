@@ -12,6 +12,12 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
+from src.configuracion_proyecto import (
+    LONGITUD_MAXIMA_TRANSFORMER,
+    MAX_FEATURES_TFIDF,
+    SEMILLA_REPRODUCIBLE,
+)
+
 
 COLUMNA_TEXTO_LIMPIO = "texto_limpio"
 COLUMNA_TEXTO_LIMPIO_CENSURADO = "texto_limpio_censurado"
@@ -211,7 +217,7 @@ def construir_ejemplos_limpieza(
     columna_origen: str = COLUMNA_TEXTO_ORIGINAL,
     columna_limpia: str = COLUMNA_TEXTO_LIMPIO,
     tamanio_muestra: int = 5,
-    semilla: int = 42,
+    semilla: int = SEMILLA_REPRODUCIBLE,
 ) -> pd.DataFrame:
     """Devuelve una muestra original->limpio para verificar visualmente la limpieza."""
     disponibles = df[[columna_origen, columna_limpia]].drop_duplicates()
@@ -252,7 +258,7 @@ def construir_auditoria_terminos(
     return pd.DataFrame(filas)
 
 
-def construir_pipeline_svm(max_caracteristicas: int = 5000) -> Pipeline:
+def construir_pipeline_svm(max_caracteristicas: int = MAX_FEATURES_TFIDF) -> Pipeline:
     """Construye el modelo base clasico (TF-IDF + LinearSVC) sin normalizaciones extra."""
     return Pipeline(
         steps=[
@@ -273,7 +279,7 @@ def entrenar_modelo_base_svm(
     df: pd.DataFrame,
     etiquetas: pd.Series,
     columna_texto: str = COLUMNA_TEXTO_LIMPIO,
-    max_caracteristicas: int = 5000,
+    max_caracteristicas: int = MAX_FEATURES_TFIDF,
 ) -> Pipeline:
     """Entrena el modelo base SVM usando la columna de texto limpio compartida."""
     assert columna_texto in df.columns, f"Falta la columna: {columna_texto}"
@@ -286,7 +292,7 @@ def entrenar_modelo_bayes(
     df: pd.DataFrame,
     etiquetas: pd.Series,
     columna_texto: str = COLUMNA_TEXTO_LIMPIO,
-    max_caracteristicas: int = 5000,
+    max_caracteristicas: int = MAX_FEATURES_TFIDF,
 ) -> Pipeline:
     """Entrena el modelo Naive Bayes usando la columna de texto limpio compartida."""
     assert columna_texto in df.columns, f"Falta la columna: {columna_texto}"
@@ -302,7 +308,7 @@ def entrenar_modelo_logistica(
     df: pd.DataFrame,
     etiquetas: pd.Series,
     columna_texto: str = COLUMNA_TEXTO_LIMPIO,
-    max_caracteristicas: int = 5000,
+    max_caracteristicas: int = MAX_FEATURES_TFIDF,
 ) -> Pipeline:
     """Entrena el modelo de Regresión Logística usando la columna de texto limpio compartida."""
     assert columna_texto in df.columns, f"Falta la columna: {columna_texto}"
@@ -318,7 +324,7 @@ def tokenizar_para_transformer(
     df: pd.DataFrame,
     tokenizador,
     columna_texto: str = COLUMNA_TEXTO_LIMPIO_TRANSFORMER,
-    longitud_maxima: int = 128,
+    longitud_maxima: int = LONGITUD_MAXIMA_TRANSFORMER,
 ):
     """Tokeniza la columna de texto limpio sin aplicar limpieza adicional."""
     assert columna_texto in df.columns, f"Falta la columna: {columna_texto}"

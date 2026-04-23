@@ -9,6 +9,16 @@
 - Fase 4: preparada en codigo y notebook; bloqueada offline por ausencia de pesos locales del modelo
 - Fase 5: mini-API SVM disponible; comparativa final pendiente de correr el transformer
 
+## Parametros congelados del proyecto
+
+- Semilla reproducible: `42`
+- Split holdout: `0.2`
+- Muestra objetivo inicial: `10000` registros si la memoria disponible lo permite
+- Baseline clasico: `TfidfVectorizer(max_features=5000)` + `LinearSVC`
+- Transformer CPU-only: `distilbert-base-multilingual-cased`, `max_length=128`, `batch_size=4`, `epochs=1`
+- Columna canonica compartida: `texto_limpio`
+- Clases objetivo: `Departamento`, `Casa`, `PH`
+
 ## Fase 0 - Auditoria de hardware
 
 **Objetivo:** relevar limites reales de CPU y RAM para fijar parametros seguros.
@@ -16,6 +26,7 @@
 **Entregables:**
 - `src/infraestructura_cpu.py`
 - notebook `notebooks/00_fase_0_auditoria_cpu.ipynb`
+- `src/configuracion_proyecto.py`
 - politica de threads y limpieza de memoria
 - decision documentada sobre tamano de muestra inicial
 
@@ -29,6 +40,7 @@
 
 **Entregables:**
 - descripcion del dataset principal
+- trazabilidad minima de columnas y clases del dataset
 - muestreo estratificado reproducible
 - split train/test documentado
 - notebook `notebooks/01_fases_1_a_3_corpus_y_svm.ipynb`
@@ -60,6 +72,7 @@
 - `LinearSVC`
 - metricas base y validacion cruzada
 - matriz de confusion
+- analisis de errores por clase
 - artefacto serializable del SVM para API local
 
 **Criterio de cierre:**
@@ -75,6 +88,7 @@
 - inferencia cuantizada para CPU
 - notebook `notebooks/02_fase_4_transformer_cpu.ipynb`
 - chequeo explicito de pesos locales del modelo
+- contingencia formal documentada en `doc/transformer_contingencia.md`
 
 **Criterio de cierre:**
 - el modelo corre sin bloquear la maquina
@@ -88,6 +102,7 @@
 - precision, recall y F1 por modelo
 - matriz de confusion
 - analisis de errores, con foco en `PH`
+- tabla comparativa final bajo un mismo esquema de metricas
 - mini-API local del baseline SVM (`src/api_local.py`)
 
 **Criterio de cierre:**

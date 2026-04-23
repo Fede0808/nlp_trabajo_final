@@ -6,6 +6,7 @@ from typing import Sequence
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from src.configuracion_proyecto import CLASES_OBJETIVO, SEMILLA_REPRODUCIBLE, TAMANIO_TEST
 from src.property_text_pipeline import (
     COLUMNA_OBJETIVO,
     COLUMNA_TEXTO_ORIGINAL,
@@ -13,7 +14,7 @@ from src.property_text_pipeline import (
 )
 
 
-CLASES_OBJETIVO_POR_DEFECTO = ("Departamento", "Casa", "PH")
+CLASES_OBJETIVO_POR_DEFECTO = CLASES_OBJETIVO
 
 
 def cargar_corpus_base(
@@ -33,7 +34,7 @@ def muestrear_corpus_estratificado(
     df: pd.DataFrame,
     tamanio_muestra: int,
     columna_objetivo: str = COLUMNA_OBJETIVO,
-    semilla: int = 42,
+    semilla: int = SEMILLA_REPRODUCIBLE,
 ) -> pd.DataFrame:
     """Obtiene una muestra estratificada exacta manteniendo la proporcion de clases."""
     if tamanio_muestra <= 0:
@@ -55,7 +56,7 @@ def balancear_clases_mediante_submuestreo(
     df: pd.DataFrame,
     columna_objetivo: str = COLUMNA_OBJETIVO,
     cantidad_por_clase: int = 5000,
-    semilla: int = 42,
+    semilla: int = SEMILLA_REPRODUCIBLE,
 ) -> pd.DataFrame:
     """Realiza submuestreo balanceado: toma igual cantidad de ejemplos por clase.
     
@@ -100,8 +101,8 @@ def construir_tabla_distribucion_clases(
 def preparar_corpus_para_modelado(
     ruta_datos: str | Path,
     tamanio_muestra: int | None = None,
-    tamanio_test: float = 0.2,
-    semilla: int = 42,
+    tamanio_test: float = TAMANIO_TEST,
+    semilla: int = SEMILLA_REPRODUCIBLE,
     balancear_clases: bool = True,
     cantidad_entrenamiento_por_clase: int = 5000,
     cantidad_prueba_total: int | None = None,
@@ -166,6 +167,9 @@ def preparar_corpus_para_modelado(
             df_prueba,
         )
     else:
+        if tamanio_muestra is None:
+            raise ValueError("tamanio_muestra no puede ser None cuando balancear_clases=False")
+
         df_muestra = muestrear_corpus_estratificado(
             df=df_base,
             tamanio_muestra=tamanio_muestra,

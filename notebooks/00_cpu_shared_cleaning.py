@@ -26,9 +26,18 @@ from src.corpus_inmuebles import (
     construir_tabla_distribucion_clases,
     preparar_corpus_para_modelado,
 )
+from src.configuracion_proyecto import (
+    LONGITUD_MAXIMA_TRANSFORMER,
+    RUTA_DATASET_ENTRENAMIENTO,
+    SEMILLA_REPRODUCIBLE,
+    TAMANIO_TEST,
+    construir_tabla_configuracion,
+)
 from src.artefactos_modelos import guardar_modelo_svm
 from src.evaluacion_modelos import (
+    construir_analisis_errores_por_clase,
     construir_matriz_confusion_tabla,
+    construir_tabla_comparativa_modelos,
     construir_reporte_clasificacion,
     construir_tabla_metricas,
     evaluar_svm_con_validacion_cruzada,
@@ -50,6 +59,7 @@ from src.property_text_pipeline import (
 )
 from src.transformer_cpu import (
     NOMBRE_MODELO_TRANSFORMER,
+    construir_estado_contingencia_transformer,
     relevar_estado_modelo_local,
     resolver_origen_tokenizador,
 )
@@ -64,14 +74,14 @@ def mostrar_tabla(titulo: str, df: pd.DataFrame) -> None:
 
 
 # %%
-RUTA_DATOS = RAIZ_PROYECTO / "data" / "entrenamiento.csv"
-TAMANIO_TEST = 0.2
-SEMILLA = 42
+RUTA_DATOS = RAIZ_PROYECTO / RUTA_DATASET_ENTRENAMIENTO
+SEMILLA = SEMILLA_REPRODUCIBLE
 
 
 # %%
 resumen_hardware = relevar_hardware()
 mostrar_tabla("Auditoria de hardware", resumen_hardware_como_tabla(resumen_hardware))
+mostrar_tabla("Configuracion reproducible", construir_tabla_configuracion())
 hilos_torch = configurar_torch_cpu()
 tamanio_muestra = sugerir_tamanio_muestra(resumen_hardware.memoria_disponible_gb)
 print("Hilos configurados para torch:", hilos_torch)
@@ -135,6 +145,20 @@ mostrar_tabla(
         etiquetas_ordenadas=["Departamento", "Casa", "PH"],
     ),
 )
+mostrar_tabla(
+    "Analisis de errores por clase (SVM)",
+    construir_analisis_errores_por_clase(
+        df_prueba[COLUMNA_OBJETIVO],
+        predicciones_svm,
+        etiquetas_ordenadas=["Departamento", "Casa", "PH"],
+    ),
+)
+mostrar_tabla(
+    "Tabla comparativa parcial",
+    construir_tabla_comparativa_modelos(
+        {"svm_baseline": construir_tabla_metricas(df_prueba[COLUMNA_OBJETIVO], predicciones_svm)}
+    ),
+)
 ruta_modelo = guardar_modelo_svm(modelo_svm)
 print("Artefacto SVM guardado en:", ruta_modelo)
 liberar_memoria()
@@ -142,6 +166,10 @@ liberar_memoria()
 # %%
 estado_transformer = relevar_estado_modelo_local(NOMBRE_MODELO_TRANSFORMER)
 mostrar_tabla("Estado local del transformer", estado_transformer)
+mostrar_tabla(
+    "Contingencia formal del transformer",
+    construir_estado_contingencia_transformer(NOMBRE_MODELO_TRANSFORMER),
+)
 
 origen_tokenizador, tokenizador_es_local = resolver_origen_tokenizador(NOMBRE_MODELO_TRANSFORMER)
 tokenizador = AutoTokenizer.from_pretrained(
@@ -153,7 +181,7 @@ tokens_del_transformer = tokenizar_para_transformer(
     df_entrenamiento.head(8),
     tokenizador,
     columna_texto=COLUMNA_TEXTO_LIMPIO,
-    longitud_maxima=128,
+    longitud_maxima=LONGITUD_MAXIMA_TRANSFORMER,
 )
 
 assert "input_ids" in tokens_del_transformer

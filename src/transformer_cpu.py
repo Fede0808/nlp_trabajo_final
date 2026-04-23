@@ -9,10 +9,14 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+from src.configuracion_proyecto import (
+    BATCH_SIZE_TRANSFORMER,
+    EPOCHS_TRANSFORMER,
+    LONGITUD_MAXIMA_TRANSFORMER,
+    NOMBRE_MODELO_TRANSFORMER,
+)
 from src.property_text_pipeline import COLUMNA_OBJETIVO, COLUMNA_TEXTO_LIMPIO_TRANSFORMER
 
-
-NOMBRE_MODELO_TRANSFORMER = "distilbert-base-multilingual-cased"
 RAIZ_CACHE_HF = Path.home() / ".cache" / "huggingface" / "hub"
 
 
@@ -33,7 +37,7 @@ class DatasetTextosClasificacion(Dataset):
         textos: Sequence[str],
         etiquetas: Sequence[int],
         tokenizador,
-        longitud_maxima: int = 128,
+        longitud_maxima: int = LONGITUD_MAXIMA_TRANSFORMER,
     ) -> None:
         self.textos = list(textos)
         self.etiquetas = list(etiquetas)
@@ -104,6 +108,44 @@ def relevar_estado_modelo_local(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) 
     return pd.DataFrame([asdict(estado)])
 
 
+def construir_estado_contingencia_transformer(
+    nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+) -> pd.DataFrame:
+    """Resume el estado offline del transformer y la accion recomendada."""
+    estado = relevar_estado_modelo_local(nombre_modelo).iloc[0].to_dict()
+    pesos_disponibles = bool(estado["pesos_modelo_disponibles"])
+    tokenizador_disponible = bool(estado["tokenizador_disponible"])
+
+    if pesos_disponibles:
+        bloqueo = "sin_bloqueo"
+        accion = "Se puede ejecutar entrenamiento e inferencia CPU-only con el snapshot local."
+    elif tokenizador_disponible:
+        bloqueo = "faltan_pesos"
+        accion = (
+            "El tokenizador existe en cache, pero faltan pesos locales. Mantener documentada "
+            "la contingencia y no presentar comparacion final del transformer como concluida."
+        )
+    else:
+        bloqueo = "sin_cache_local"
+        accion = (
+            "No hay tokenizador ni pesos locales. El flujo queda preparado, pero la fase depende "
+            "de cargar el modelo offline antes de entrenar."
+        )
+
+    return pd.DataFrame(
+        [
+            {
+                **estado,
+                "bloqueo": bloqueo,
+                "accion_recomendada": accion,
+                "batch_size_recomendado": BATCH_SIZE_TRANSFORMER,
+                "longitud_maxima_recomendada": LONGITUD_MAXIMA_TRANSFORMER,
+                "epochs_recomendadas": EPOCHS_TRANSFORMER,
+            }
+        ]
+    )
+
+
 def cargar_tokenizador_transformer(
     nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
 ):
@@ -155,8 +197,8 @@ def crear_dataloaders_transformer(
     etiqueta_a_id: dict[str, int],
     columna_texto: str = COLUMNA_TEXTO_LIMPIO_TRANSFORMER,
     columna_objetivo: str = COLUMNA_OBJETIVO,
-    batch_size: int = 4,
-    longitud_maxima: int = 128,
+    batch_size: int = BATCH_SIZE_TRANSFORMER,
+    longitud_maxima: int = LONGITUD_MAXIMA_TRANSFORMER,
 ) -> tuple[DataLoader, DataLoader]:
     """Construye dataloaders de entrenamiento y prueba listos para CPU."""
     dataset_entrenamiento = DatasetTextosClasificacion(
@@ -180,7 +222,7 @@ def crear_dataloaders_transformer(
 def entrenar_transformer_en_cpu(
     modelo,
     dataloader_entrenamiento: DataLoader,
-    epochs: int = 1,
+    epochs: int = EPOCHS_TRANSFORMER,
     learning_rate: float = 5e-5,
 ) -> pd.DataFrame:
     """Ejecuta un loop minimo de entrenamiento CPU-only para el transformer."""
