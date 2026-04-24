@@ -29,4 +29,15 @@ La entrega sigue siendo defendible si:
 - el baseline SVM esta completamente cerrado;
 - la mini-API local funciona con el artefacto final del baseline;
 - el bloqueo del transformer se documenta explicitamente como restriccion de disponibilidad local de pesos y no como falta de implementacion;
-- la comparacion final identifica que el enfoque profundo estaba preparado para el mismo split, mismas clases y misma columna `texto_limpio`.
+- la comparacion final identifica que el enfoque profundo estaba preparado para el mismo split, mismas clases y misma columna `texto_limpio`;
+- si los pesos estan disponibles y el notebook se ejecuto, el transformer puede presentarse como enfoque profundo corrido correctamente aunque no supere al baseline;
+- el escenario censurado se presenta como control metodologico del data leakage y no como obligacion de reentrenar hasta optimizar performance.
+
+## Regla de comunicacion final
+
+Para el cierre del repositorio, el mensaje tecnico debe ser consistente:
+
+- el SVM queda como artefacto principal de inferencia local;
+- DistilBERT queda como enfoque profundo reproducible bajo presupuesto CPU restringido;
+- la comparacion final puede concluir que el enfoque profundo cumple la consigna aunque quede por debajo del baseline en `accuracy` y `f1_macro`;
+- la contingencia solo invalida la comparacion final si faltan pesos locales o si el notebook no pudo ejecutarse.

@@ -103,7 +103,7 @@ def preparar_corpus_para_modelado(
     tamanio_muestra: int | None = None,
     tamanio_test: float = TAMANIO_TEST,
     semilla: int = SEMILLA_REPRODUCIBLE,
-    balancear_clases: bool = True,
+    balancear_clases: bool = False,
     cantidad_entrenamiento_por_clase: int = 5000,
     cantidad_prueba_total: int | None = None,
     columna_texto: str = COLUMNA_TEXTO_ORIGINAL,
@@ -112,12 +112,19 @@ def preparar_corpus_para_modelado(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Carga, muestrea, limpia y separa el corpus en train/test.
 
+    La politica estandar del proyecto es:
+    1. extraer una muestra estratificada de tamanio ``tamanio_muestra``;
+    2. partir esa misma muestra en train/test con ``tamanio_test``.
+
+    El modo ``balancear_clases=True`` se conserva solo como alternativa
+    metodologica para experimentos puntuales.
+
     Args:
         ruta_datos: Ruta al archivo CSV
-        tamanio_muestra: Tamaño de la muestra a extraer (usado si balancear_clases=False)
-        tamanio_test: Fracción para el conjunto de test (usado si balancear_clases=False)
+        tamanio_muestra: Tamaño de la muestra a extraer en la politica estandar
+        tamanio_test: Fracción para el conjunto de test en la politica estandar
         semilla: Seed para reproducibilidad
-        balancear_clases: Si True, realiza un muestreo exacto para entrenamiento y test
+        balancear_clases: Si True, activa el modo alternativo de submuestreo balanceado
         cantidad_entrenamiento_por_clase: Cuántos ejemplos por clase para entrenamiento
         cantidad_prueba_total: Cuántos ejemplos aleatorios en total para prueba. Si es None se calcula automáticamente asumiendo que train es el 70% del total.
         columna_texto: Nombre de la columna con texto original
@@ -130,6 +137,31 @@ def preparar_corpus_para_modelado(
         columna_objetivo=columna_objetivo,
         clases_objetivo=clases_objetivo,
     )
+
+    if not balancear_clases:
+        if tamanio_muestra is None:
+            raise ValueError("tamanio_muestra no puede ser None cuando balancear_clases=False")
+
+        df_muestra = muestrear_corpus_estratificado(
+            df=df_base,
+            tamanio_muestra=tamanio_muestra,
+            columna_objetivo=columna_objetivo,
+            semilla=semilla,
+        )
+        df_muestra = agregar_columna_texto_limpio(df_muestra)
+
+        df_entrenamiento, df_prueba = train_test_split(
+            df_muestra,
+            test_size=tamanio_test,
+            random_state=semilla,
+            stratify=df_muestra[columna_objetivo],
+        )
+
+        return (
+            df_muestra.reset_index(drop=True),
+            df_entrenamiento.reset_index(drop=True),
+            df_prueba.reset_index(drop=True),
+        )
 
     if balancear_clases:
         if cantidad_prueba_total is None:
@@ -165,28 +197,4 @@ def preparar_corpus_para_modelado(
             df_muestra,
             df_entrenamiento,
             df_prueba,
-        )
-    else:
-        if tamanio_muestra is None:
-            raise ValueError("tamanio_muestra no puede ser None cuando balancear_clases=False")
-
-        df_muestra = muestrear_corpus_estratificado(
-            df=df_base,
-            tamanio_muestra=tamanio_muestra,
-            columna_objetivo=columna_objetivo,
-            semilla=semilla,
-        )
-        df_muestra = agregar_columna_texto_limpio(df_muestra)
-
-        df_entrenamiento, df_prueba = train_test_split(
-            df_muestra,
-            test_size=tamanio_test,
-            random_state=semilla,
-            stratify=df_muestra[columna_objetivo],
-        )
-
-        return (
-            df_muestra.reset_index(drop=True),
-            df_entrenamiento.reset_index(drop=True),
-            df_prueba.reset_index(drop=True),
         )
