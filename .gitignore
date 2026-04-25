@@ -47,3 +47,5 @@ modelos/
 # Caché de Python y Jupyter
 __pycache__/
 .ipynb_checkpoints/
+modelos_guardados/
+

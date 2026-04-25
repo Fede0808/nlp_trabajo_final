@@ -52,35 +52,6 @@ def muestrear_corpus_estratificado(
     return df_muestra.reset_index(drop=True)
 
 
-def balancear_clases_mediante_submuestreo(
-    df: pd.DataFrame,
-    columna_objetivo: str = COLUMNA_OBJETIVO,
-    cantidad_por_clase: int = 5000,
-    semilla: int = SEMILLA_REPRODUCIBLE,
-) -> pd.DataFrame:
-    """Realiza submuestreo balanceado: toma igual cantidad de ejemplos por clase.
-    
-    Sin crear datos sintéticos. Si una clase tiene menos ejemplos que los solicitados,
-    se toma todo lo disponible de esa clase.
-    
-    Args:
-        df: DataFrame con datos
-        columna_objetivo: Nombre de la columna con etiquetas
-        cantidad_por_clase: Cantidad de ejemplos a tomar de cada clase (default 5000)
-        semilla: Seed para reproducibilidad
-    """
-    dfs_balanceados = []
-    for clase in df[columna_objetivo].unique():
-        df_clase = df[df[columna_objetivo] == clase]
-        # Tomar min(cantidad_por_clase, len(df_clase)) para no pedir más de lo disponible
-        n_ejemplos = min(cantidad_por_clase, len(df_clase))
-        df_clase_submuestreada = df_clase.sample(n=n_ejemplos, random_state=semilla, replace=False)
-        dfs_balanceados.append(df_clase_submuestreada)
-    
-    df_balanceado = pd.concat(dfs_balanceados, ignore_index=True)
-    return df_balanceado.sample(frac=1.0, random_state=semilla).reset_index(drop=True)
-
-
 def construir_tabla_distribucion_clases(
     df: pd.DataFrame,
     columna_objetivo: str = COLUMNA_OBJETIVO,
@@ -100,37 +71,38 @@ def construir_tabla_distribucion_clases(
 
 def preparar_corpus_para_modelado(
     ruta_datos: str | Path,
-    tamanio_muestra: int | None = None,
+    tamanio_muestra: int,
     tamanio_test: float = TAMANIO_TEST,
     semilla: int = SEMILLA_REPRODUCIBLE,
-    balancear_clases: bool = False,
-    cantidad_entrenamiento_por_clase: int = 5000,
-    cantidad_prueba_total: int | None = None,
     columna_texto: str = COLUMNA_TEXTO_ORIGINAL,
     columna_objetivo: str = COLUMNA_OBJETIVO,
     clases_objetivo: Sequence[str] = CLASES_OBJETIVO_POR_DEFECTO,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Carga, muestrea, limpia y separa el corpus en train/test.
 
-    La politica estandar del proyecto es:
-    1. extraer una muestra estratificada de tamanio ``tamanio_muestra``;
-    2. partir esa misma muestra en train/test con ``tamanio_test``.
+    El flujo de datos es el siguiente:
+    1. se define un tamaño de muestra total ``tamanio_muestra`` según el hardware;
+    2. se extrae un conjunto de prueba estratificado de tamaño ``tamanio_test * tamanio_muestra``
+       a partir del corpus original, conservando las proporciones de clases del dataset;
+    3. el conjunto de entrenamiento se arma con el resto de datos y se submuestrea
+       de forma balanceada en partes iguales por clase hasta alcanzar aproximadamente
+       ``(1 - tamanio_test) * tamanio_muestra`` registros.
 
-    El modo ``balancear_clases=True`` se conserva solo como alternativa
-    metodologica para experimentos puntuales.
+    De esta manera, todos los modelos usan el mismo ``df_entrenamiento`` y ``df_prueba``
+    base, aunque cada modelo aplique su propio tratamiento de texto.
 
     Args:
         ruta_datos: Ruta al archivo CSV
-        tamanio_muestra: Tamaño de la muestra a extraer en la politica estandar
-        tamanio_test: Fracción para el conjunto de test en la politica estandar
+        tamanio_muestra: Tamaño total de la muestra definida por el hardware
+        tamanio_test: Fracción del conjunto total que se reserva para prueba
         semilla: Seed para reproducibilidad
-        balancear_clases: Si True, activa el modo alternativo de submuestreo balanceado
-        cantidad_entrenamiento_por_clase: Cuántos ejemplos por clase para entrenamiento
-        cantidad_prueba_total: Cuántos ejemplos aleatorios en total para prueba. Si es None se calcula automáticamente asumiendo que train es el 70% del total.
         columna_texto: Nombre de la columna con texto original
         columna_objetivo: Nombre de la columna con etiquetas
         clases_objetivo: Clases a incluir en el análisis
     """
+    if tamanio_muestra is None:
+        raise ValueError("tamanio_muestra no puede ser None")
+
     df_base = cargar_corpus_base(
         ruta_datos=ruta_datos,
         columna_texto=columna_texto,
@@ -138,63 +110,41 @@ def preparar_corpus_para_modelado(
         clases_objetivo=clases_objetivo,
     )
 
-    if not balancear_clases:
-        if tamanio_muestra is None:
-            raise ValueError("tamanio_muestra no puede ser None cuando balancear_clases=False")
+    tamanio_prueba = max(1, int(tamanio_muestra * tamanio_test))
+    tamanio_entrenamiento = tamanio_muestra - tamanio_prueba
 
-        df_muestra = muestrear_corpus_estratificado(
-            df=df_base,
-            tamanio_muestra=tamanio_muestra,
-            columna_objetivo=columna_objetivo,
-            semilla=semilla,
-        )
-        df_muestra = agregar_columna_texto_limpio(df_muestra)
+    df_entrenamiento_original, df_prueba = train_test_split(
+        df_base,
+        test_size=tamanio_prueba,
+        random_state=semilla,
+        stratify=df_base[columna_objetivo],
+    )
 
-        df_entrenamiento, df_prueba = train_test_split(
-            df_muestra,
-            test_size=tamanio_test,
-            random_state=semilla,
-            stratify=df_muestra[columna_objetivo],
-        )
+    # Balancear el entrenamiento con partes iguales por clase.
+    cantidad_por_clase = tamanio_entrenamiento // len(clases_objetivo)
+    resto = tamanio_entrenamiento % len(clases_objetivo)
 
-        return (
-            df_muestra.reset_index(drop=True),
-            df_entrenamiento.reset_index(drop=True),
-            df_prueba.reset_index(drop=True),
-        )
+    dfs_entrenamiento = []
+    for indice, clase in enumerate(clases_objetivo):
+        n_ejemplos = cantidad_por_clase + (1 if indice < resto else 0)
+        df_clase = df_entrenamiento_original[df_entrenamiento_original[columna_objetivo] == clase]
+        if len(df_clase) < n_ejemplos:
+            raise ValueError(
+                f"No hay suficientes ejemplos de la clase {clase} para construir un entrenamiento balanceado."
+            )
+        dfs_entrenamiento.append(df_clase.sample(n=n_ejemplos, random_state=semilla))
 
-    if balancear_clases:
-        if cantidad_prueba_total is None:
-            # Calcular cantidad de prueba total para que represente el 30% del total,
-            # siendo el entrenamiento el 70% (con "n" casos por clase)
-            total_train = cantidad_entrenamiento_por_clase * len(clases_objetivo)
-            cantidad_prueba_total = int((total_train / 0.7) - total_train)
+    df_entrenamiento = pd.concat(dfs_entrenamiento, ignore_index=True)
+    df_entrenamiento = df_entrenamiento.sample(frac=1.0, random_state=semilla).reset_index(drop=True)
+    df_prueba = df_prueba.sample(frac=1.0, random_state=semilla).reset_index(drop=True)
 
-        dfs_entrenamiento = []
-        df_restante = df_base.copy()
+    df_entrenamiento = agregar_columna_texto_limpio(df_entrenamiento)
+    df_prueba = agregar_columna_texto_limpio(df_prueba)
 
-        for clase in clases_objetivo:
-            df_clase = df_base[df_base[columna_objetivo] == clase]
-            n_ejemplos = min(cantidad_entrenamiento_por_clase, len(df_clase))
-            df_clase_train = df_clase.sample(n=n_ejemplos, random_state=semilla)
-            dfs_entrenamiento.append(df_clase_train)
-            df_restante = df_restante.drop(df_clase_train.index)
+    df_muestra = pd.concat([df_entrenamiento, df_prueba], ignore_index=True)
 
-        df_entrenamiento = pd.concat(dfs_entrenamiento, ignore_index=True)
-
-        n_prueba = min(cantidad_prueba_total, len(df_restante))
-        df_prueba = df_restante.sample(n=n_prueba, random_state=semilla)
-
-        df_entrenamiento = df_entrenamiento.sample(frac=1.0, random_state=semilla).reset_index(drop=True)
-        df_prueba = df_prueba.sample(frac=1.0, random_state=semilla).reset_index(drop=True)
-
-        df_entrenamiento = agregar_columna_texto_limpio(df_entrenamiento)
-        df_prueba = agregar_columna_texto_limpio(df_prueba)
-
-        df_muestra = pd.concat([df_entrenamiento, df_prueba], ignore_index=True)
-
-        return (
-            df_muestra,
-            df_entrenamiento,
-            df_prueba,
-        )
+    return (
+        df_muestra.reset_index(drop=True),
+        df_entrenamiento.reset_index(drop=True),
+        df_prueba.reset_index(drop=True),
+    )
