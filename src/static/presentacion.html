@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIF NLP | UNLaM - Grupo 7</title>
+  <link rel="stylesheet" href="./presentacion.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand-lockup">
+      <div class="brand-mark">UNLaM</div>
+      <div class="brand-copy">
+        <strong>SNLP · Grupo 7</strong>
+        <span>Especializacion en Ciencia de Datos</span>
+      </div>
+    </div>
+    <div class="header-side">
+      <div class="header-summary">
+        Clasificacion de avisos inmobiliarios con enfoque clasico y profundo
+      </div>
+      <div class="status-group">
+        <span class="status-label">API</span>
+        <span id="api-status" class="status-pill status-pending">Verificando</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="presentation-shell">
+    <section class="deck-column">
+      <nav class="deck-nav" aria-label="Navegacion de filminas">
+        <button id="prev-slide" class="nav-button" type="button">Anterior</button>
+        <div class="deck-progress">
+          <span id="slide-counter">1 / 6</span>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+        <button id="next-slide" class="nav-button" type="button">Siguiente</button>
+      </nav>
+
+      <article class="slides" id="slides-root">
+        <section class="slide slide-hero is-active" data-title="Portada">
+          <span class="kicker kicker-light">Trabajo Integrador Final</span>
+          <h1>TIF: Clasificacion de Avisos Inmobiliarios</h1>
+          <p class="hero-subtitle">
+            Enfoque clasico y profundo sobre el mismo corpus reproducible
+          </p>
+          <div class="hero-meta">
+            <span>Mismo split</span>
+            <span>CPU-only</span>
+            <span>Mini-API local</span>
+          </div>
+        </section>
+
+        <section class="slide" data-title="Problema y corpus">
+          <span class="kicker">01 · Problema y corpus</span>
+          <h2>Muestreo y preprocesamiento</h2>
+          <p>
+            El proyecto aborda la clasificacion de avisos inmobiliarios a partir
+            de texto libre (`description`) y busca predecir `Departamento`,
+            `Casa` o `PH` con una configuracion reproducible.
+          </p>
+          <div class="content-grid">
+            <div class="info-card">
+              <h3>Dataset operativo</h3>
+              <p>`data/entrenamiento.csv` con texto y etiqueta objetivo.</p>
+            </div>
+            <div class="info-card">
+              <h3>Particion unificada</h3>
+              <p>Muestra de 10.000 casos, con 8.000 en train y 2.000 en test.</p>
+            </div>
+            <div class="info-card">
+              <h3>Reproducibilidad</h3>
+              <p>Semilla 42 y la misma particion para SVM y DistilBERT.</p>
+            </div>
+          </div>
+          <ul class="bullet-list">
+            <li>Preprocesamiento sobre la columna canonica `texto_limpio`.</li>
+            <li>Escenario censurado como control de data leakage.</li>
+            <li>Mismos casos para todos los modelos; cambia solo el tratamiento del texto.</li>
+          </ul>
+        </section>
+
+        <section class="slide" data-title="Baseline SVM">
+          <span class="kicker">02 · Baseline clasico</span>
+          <h2>TF-IDF + SVM como artefacto principal</h2>
+          <p>
+            El baseline clasico es el modelo operativo del proyecto. Combina
+            representacion TF-IDF con SVM y se persiste como
+            `artifacts/modelo_svm.joblib` para inferencia local.
+          </p>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span>Accuracy Base</span>
+              <strong>0.8992</strong>
+            </div>
+            <div class="metric-card">
+              <span>F1 Macro Base</span>
+              <strong>0.7904</strong>
+            </div>
+            <div class="metric-card metric-card-alert">
+              <span>Accuracy Censurado</span>
+              <strong>0.8427</strong>
+            </div>
+            <div class="metric-card metric-card-alert">
+              <span>F1 Macro Censurado</span>
+              <strong>0.7185</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" data-title="DistilBERT">
+          <span class="kicker">03 · Enfoque profundo</span>
+          <h2>DistilBERT CPU-only bajo presupuesto controlado</h2>
+          <p>
+            El enfoque profundo se implemento con
+            `distilbert-base-multilingual-cased`, ejecutado con
+            `max_length=128`, `batch_size=4` y `epochs=1`.
+          </p>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span>Accuracy Base</span>
+              <strong>0.8897</strong>
+            </div>
+            <div class="metric-card">
+              <span>F1 Macro Base</span>
+              <strong>0.7847</strong>
+            </div>
+            <div class="metric-card metric-card-alert">
+              <span>Accuracy Censurado</span>
+              <strong>0.7254</strong>
+            </div>
+            <div class="metric-card metric-card-alert">
+              <span>F1 Macro Censurado</span>
+              <strong>0.6265</strong>
+            </div>
+          </div>
+          <p class="note">
+            El `LOAD REPORT` es esperable en fine-tuning sobre checkpoint base:
+            la cabeza de clasificacion se inicializa desde cero.
+          </p>
+        </section>
+
+        <section class="slide" data-title="Comparacion">
+          <span class="kicker">04 · Comparacion metodologica</span>
+          <h2>Resultados y leakage</h2>
+          <p>
+            Ambos enfoques se evaluaron sobre el mismo corpus, las mismas clases
+            y el mismo split. El escenario censurado se uso para medir impacto
+            del leakage sobre la señal linguistica.
+          </p>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Base</th>
+                <th>Censurado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SVM</strong></td>
+                <td>0.8992 / 0.7904</td>
+                <td>0.8427 / 0.7185</td>
+              </tr>
+              <tr>
+                <td><strong>DistilBERT</strong></td>
+                <td>0.8897 / 0.7847</td>
+                <td>0.7254 / 0.6265</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="note">
+            Conclusion tecnica: el baseline SVM resulta mas resiliente bajo el
+            presupuesto de computo actual y queda como artefacto principal de inferencia.
+          </p>
+        </section>
+
+        <section class="slide" data-title="Implementacion">
+          <span class="kicker">05 · Implementacion</span>
+          <h2>Mini-API local y demo en vivo</h2>
+          <p>
+            La aplicacion expone `GET /salud`, `POST /predecir` y esta misma
+            presentacion en `GET /presentacion`. La demo lateral usa el backend
+            real del proyecto.
+          </p>
+          <div class="content-grid">
+            <div class="info-card">
+              <h3>Artefacto</h3>
+              <p>`artifacts/modelo_svm.joblib`</p>
+            </div>
+            <div class="info-card">
+              <h3>Backend</h3>
+              <p>FastAPI servido en localhost</p>
+            </div>
+            <div class="info-card">
+              <h3>Uso correcto</h3>
+              <p>Abrir por HTTP, no con `file://`</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" data-title="Cierre">
+          <span class="kicker">06 · Cierre</span>
+          <h2>Estado final del trabajo</h2>
+          <p>
+            La entrega cubre la consigna completa: problema real, corpus
+            reproducible, dos enfoques, comparacion tecnica, mini-API local y
+            consideraciones metodologicas.
+          </p>
+          <div class="content-grid">
+            <div class="info-card">
+              <h3>Consigna</h3>
+              <p>Problema, corpus, comparacion, API y cierre defendible.</p>
+            </div>
+            <div class="info-card">
+              <h3>Mensaje tecnico</h3>
+              <p>SVM gana bajo CPU restringido; DistilBERT cumple como contraste profundo.</p>
+            </div>
+            <div class="info-card">
+              <h3>Demo</h3>
+              <p>Inferencia local disponible desde la misma app.</p>
+            </div>
+          </div>
+        </section>
+      </article>
+    </section>
+
+    <aside class="demo-column">
+      <section class="demo-panel">
+        <div class="demo-heading">
+          <span class="kicker">Demo en vivo</span>
+          <h2>Consultar el clasificador local</h2>
+        </div>
+
+        <p class="demo-copy">
+          Ingresar una descripcion libre y ejecutar la prediccion contra la API
+          local. Si abriste esta pagina con `file://`, la demo no va a poder
+          hablar con el backend.
+        </p>
+
+        <form id="prediction-form" class="prediction-form">
+          <label class="field-label" for="descripcion">Descripcion del inmueble</label>
+          <textarea id="descripcion" name="descripcion" rows="8"
+            placeholder="Ejemplo: PH interno de 4 ambientes con patio, entrada independiente y bajas expensas."
+            required></textarea>
+
+          <div class="form-actions">
+            <button id="predict-button" class="nav-button nav-button-primary" type="submit">
+              Predecir clase
+            </button>
+            <button id="sample-button" class="nav-button" type="button">
+              Cargar ejemplo
+            </button>
+          </div>
+        </form>
+
+        <div id="demo-message" class="demo-message" role="status">
+          Esperando una descripcion para consultar `POST /predecir`.
+        </div>
+
+        <dl class="result-list">
+          <div>
+            <dt>Clase predicha</dt>
+            <dd id="result-class">-</dd>
+          </div>
+          <div>
+            <dt>Texto limpio</dt>
+            <dd id="result-clean">-</dd>
+          </div>
+          <div>
+            <dt>Ruta del modelo</dt>
+            <dd id="result-path">-</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
+  </main>
+
+  <script src="./presentacion.js" defer></script>
+</body>
+
+</html>

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from src.artefactos_modelos import (
@@ -20,11 +24,29 @@ class RespuestaPrediccion(BaseModel):
     ruta_modelo: str
 
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+PRESENTACION_HTML = STATIC_DIR / "presentacion.html"
+
+
 app = FastAPI(
     title="TIF NLP - API local de inmuebles",
     version="0.1.0",
     description="Mini-API local para consultar el baseline SVM entrenado.",
 )
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def raiz() -> RedirectResponse:
+    """Redirige a la presentacion HTML principal."""
+    return RedirectResponse(url="/presentacion", status_code=307)
+
+
+@app.get("/presentacion", include_in_schema=False)
+def presentacion() -> FileResponse:
+    """Sirve la presentacion HTML local del trabajo final."""
+    return FileResponse(PRESENTACION_HTML)
 
 
 @app.get("/salud")

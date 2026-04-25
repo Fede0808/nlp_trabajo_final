@@ -51,8 +51,71 @@ Comparar modelos de clasificacion (SVM vs. Transformer destilado) para categoriz
 - Notebook Fase 0: `notebooks/00_fase_0_auditoria_cpu.ipynb`
 - Notebook Fases 1-3: `notebooks/01_fases_1_a_3_corpus_y_svm.ipynb`
 - Notebook Fase 4: `notebooks/02_fase_4_transformer_cpu.ipynb`
-- API local del SVM: `uvicorn src.api_local:app --reload`
 - Configuracion compartida: `src/configuracion_proyecto.py`
+
+## Presentacion interactiva
+
+La presentación contiene 6 slides con resumen ejecutivo, métricas, comparación de modelos y **demo en vivo** que consulta el modelo SVM.
+
+### Requisitos previos
+
+Asegúrate de que el modelo SVM ha sido entrenado y está disponible en `artifacts/modelo_svm.joblib`. Si no existe, ejecuta primero:
+
+```bash
+python notebooks/00_cpu_shared_cleaning.py
+```
+
+O abre y ejecuta el notebook:
+
+```bash
+jupyter notebook notebooks/01_fases_1_a_3_corpus_y_svm.ipynb
+```
+
+### Paso 1: Lanza la API local
+
+Desde la raíz del proyecto, abre la terminal con el entorno activado:
+
+```bash
+uvicorn src.api_local:app --reload --port 8000
+```
+
+Verás un mensaje como:
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process
+```
+
+**Nota importante**: La API sirve tanto la presentación como los endpoints de predicción. No necesitas un servidor HTTP adicional.
+
+### Paso 2: Abre la presentación en tu navegador
+
+Ve a tu navegador favorito y accede a:
+
+```
+http://localhost:8000/presentacion
+```
+
+### Paso 3: Navega y usa la demo
+
+- **Navegar entre slides**: Usa los botones "Anterior" y "Siguiente" o las flechas del teclado (`←` y `→`).
+- **Demo en vivo**: En el panel derecho puedes ingresar una descripción de inmueble y consultar la predicción del modelo SVM en tiempo real.
+- **Barra de progreso**: Sigue tu avance en las 6 slides.
+- **Cargar ejemplo**: Usa el botón "Cargar ejemplo" para rellenar una descripción de muestra.
+
+### Solución de problemas
+
+**Si ves errores 404 en CSS/JS:**
+- Asegúrate de acceder por `http://localhost:8000/presentacion` (no por `file://`).
+- Las rutas están configuradas para servirse desde la API.
+
+**Si la demo dice "No disponible":**
+- Verifica que el servidor FastAPI está corriendo (`uvicorn src.api_local:app...`).
+- Asegúrate de que `artifacts/modelo_svm.joblib` existe.
+- Prueba accediendo a `http://localhost:8000/salud` - debe responder `{"estado": "ok"}`.
+
+**Para detener el servidor:**
+
+Presiona `Ctrl+C` en la terminal donde corre la API.
 
 ## Gestion del proyecto
 - Contexto funcional y academico: `doc/consigna_context.md`
