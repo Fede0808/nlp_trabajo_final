@@ -4,240 +4,539 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TIF NLP | UNLaM - Grupo 7</title>
+  <title>TIF NLP | Presentación Final</title>
   <link rel="stylesheet" href="./presentacion.css" />
 </head>
 
-<body>
+<body data-static-benchmark-date="2026-04-26" data-static-api-model="Reg Log" data-static-api-condition="censurado">
   <header class="topbar">
-    <div class="brand-lockup">
-      <div class="brand-mark">UNLaM</div>
-      <div class="brand-copy">
-        <strong>SNLP · Grupo 7</strong>
-        <span>Especializacion en Ciencia de Datos</span>
+    <div class="topbar-main">
+      <div class="brand-lockup">
+        <div class="brand-mark">UNLaM</div>
+        <div class="brand-copy">
+          <strong>SNLP · Grupo 7</strong>
+          <span>Clasificación de avisos inmobiliarios</span>
+        </div>
+      </div>
+
+      <div class="topbar-meta">
+        <div class="meta-block">
+          <span class="meta-label">Estado API</span>
+          <span id="api-status" class="status-pill status-loading">Verificando</span>
+        </div>
+        <div class="meta-block">
+          <span class="meta-label">Benchmark</span>
+          <strong id="benchmark-date">2026-04-26</strong>
+        </div>
+        <div class="meta-block meta-progress">
+          <span class="meta-label">Progreso</span>
+          <strong><span id="current-slide">1</span>/<span id="total-slides">17</span></strong>
+        </div>
       </div>
     </div>
-    <div class="header-side">
-      <div class="header-summary">
-        Benchmark final corrido en CPU con comparacion completa entre modelos base y censurados.
+
+    <div class="topbar-progress">
+      <div class="progress-track">
+        <div id="progress-fill" class="progress-fill"></div>
       </div>
-      <div class="status-group">
-        <span class="status-label">API</span>
-        <span id="api-status" class="status-pill status-pending">Verificando</span>
+      <div class="topbar-subtitle">
+        <span id="current-slide-title">Portada</span>
+        <span id="consistency-warning" class="warning-pill is-hidden">Benchmark vivo no alineado con evidencia estática</span>
       </div>
     </div>
   </header>
 
   <main class="presentation-shell">
-    <section class="deck-column">
-      <article class="slides" id="slides-root">
-        <section class="slide slide-hero is-active" data-title="Portada">
-          <span class="kicker kicker-light">Trabajo Integrador Final</span>
-          <h1>Clasificacion de Avisos Inmobiliarios</h1>
+    <article class="slides" id="slides-root">
+      <section class="slide slide-hero is-active" data-slide-id="s01_portada" data-title="Portada">
+        <div class="hero-content">
+          <span class="eyebrow eyebrow-light">Trabajo integrador final</span>
+          <h1>Clasificación automática de avisos inmobiliarios con NLP</h1>
           <p class="hero-subtitle">
-            Generacion de una tipologia ad hoc basada en la descripcion para mejorar la busqueda del usuario.
+            Tipificación de propiedades en Casa, Departamento y PH con comparación entre modelos clásicos,
+            Transformers y lectura de negocio.
           </p>
-          <div class="hero-meta">
-            <span>Fecha benchmark: <strong id="benchmark-date">2026-04-27</strong></span>
-            <span>CPU-only</span>
-            <span>API + HTML conectados al mismo benchmark</span>
-          </div>
-        </section>
+        </div>
 
-        <section class="slide" data-title="Problema y criterio">
-          <span class="kicker">01 · Problema y criterio</span>
-          <h2>Un mismo split para dos lecturas distintas</h2>
-          <p>
-            El trabajo compara modelos clasicos y profundos sobre el mismo corpus reproducible. La lectura
-            global incluye todos los modelos, mientras que la decision operativa de la API se toma solo dentro
-            del subconjunto censurado para respetar el guardrail metodologico del trabajo.
-          </p>
-          <div class="content-grid">
-            <div class="info-card">
-              <h3>Lectura global</h3>
-              <p>Sirve para ver el rendimiento de los modelos base y dimensionar el costo de aplicar censura.</p>
-            </div>
-            <div class="info-card">
-              <h3>Lectura operativa</h3>
-              <p>El modelo activo de la API se elige solo entre los censurados, priorizando `F1 macro`.</p>
-            </div>
-            <div class="info-card">
-              <h3>Guardrail</h3>
-              <p>Si la censura no mejora el comportamiento, se explicita como hallazgo y no se maquilla.</p>
-            </div>
+        <div class="hero-panel">
+          <div class="hero-metric">
+            <span class="meta-label">Caso</span>
+            <strong>Mercado inmobiliario</strong>
           </div>
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <span>Mejor base por F1 macro</span>
-              <strong id="best-base-model">-</strong>
-            </div>
-            <div class="metric-card metric-card-alert">
-              <span>Mejor censurado para API</span>
-              <strong id="best-censored-model">-</strong>
-            </div>
+          <div class="hero-metric">
+            <span class="meta-label">Clases</span>
+            <strong>Casa · Departamento · PH</strong>
           </div>
-        </section>
-
-        <section class="slide" data-title="Modelos base">
-          <span class="kicker">02 · Modelos base</span>
-          <h2>Comparacion global sin censura</h2>
-          <p>
-            Estos resultados muestran la señal maxima disponible cuando el texto conserva terminos que pueden
-            introducir leakage. Sirven como referencia para entender que se pierde al aplicar el guardrail.
-          </p>
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th>Modelo</th>
-                <th>Familia</th>
-                <th>Accuracy</th>
-                <th>F1 macro</th>
-              </tr>
-            </thead>
-            <tbody id="base-results-body">
-              <tr>
-                <td colspan="4">Cargando benchmark...</td>
-              </tr>
-            </tbody>
-          </table>
-          <p id="base-summary" class="note">
-            Cargando lectura de modelos base...
-          </p>
-        </section>
-
-        <section class="slide" data-title="Modelos censurados">
-          <span class="kicker">03 · Modelos censurados</span>
-          <h2>Subconjunto de decision para la API</h2>
-          <p>
-            La API final se apoya solo en este subconjunto. El criterio de seleccion es `F1 macro`, con
-            `accuracy` como desempate si hiciera falta.
-          </p>
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th>Modelo</th>
-                <th>Familia</th>
-                <th>Accuracy</th>
-                <th>F1 macro</th>
-              </tr>
-            </thead>
-            <tbody id="censored-results-body">
-              <tr>
-                <td colspan="4">Cargando benchmark...</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="metrics-grid">
-            <div class="metric-card metric-card-alert">
-              <span>Modelo activo de la API</span>
-              <strong id="api-model-name">-</strong>
-            </div>
-            <div class="metric-card">
-              <span>Ruta del artefacto</span>
-              <strong id="api-model-path">-</strong>
-            </div>
+          <div class="hero-metric">
+            <span class="meta-label">Fecha benchmark</span>
+            <strong id="hero-benchmark-date">2026-04-26</strong>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="slide" data-title="Guardrail">
-          <span class="kicker">04 · Guardrail metodologico</span>
-          <h2>La censura no mejoro las metricas y eso queda declarado</h2>
-          <p id="guardrail-status" class="note">
-            Cargando conclusion metodologica...
-          </p>
-          <div class="content-grid">
-            <div class="info-card">
-              <h3>Hallazgo</h3>
-              <p id="guardrail-hallazgo">-</p>
-            </div>
-            <div class="info-card">
-              <h3>Lectura tecnica</h3>
-              <p id="guardrail-lectura">-</p>
-            </div>
-            <div class="info-card">
-              <h3>Decision final</h3>
-              <p>
-                Aun asi, la demo y la API quedan alineadas con el mejor modelo censurado para respetar el guardrail
-                definido en la consigna.
+      <section class="slide" data-slide-id="s02_problema_negocio" data-title="Problema de negocio">
+        <div class="slide-header">
+          <span class="eyebrow">01 · Problema de negocio</span>
+          <h2>Por qué clasificar propiedades automáticamente</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <div class="text-stack">
+            <p>
+              Las plataformas inmobiliarias reciben publicaciones heterogéneas, ruidosas y redactadas en texto libre.
+              Cuando los metadatos fallan, la descripción pasa a ser la principal fuente para inferir el tipo de
+              propiedad.
+            </p>
+            <p>
+              El problema no es solo académico: impacta catálogo, búsqueda, auditoría de cargas y construcción de
+              productos de datos con criterio operativo.
+            </p>
+          </div>
+
+          <div class="problem-side">
+            <figure class="asset-frame asset-frame-problem">
+              <img data-asset-src="aviso.png" alt="Ejemplo de aviso inmobiliario" />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s04_workflow" data-title="Workflow del trabajo">
+        <div class="slide-header">
+          <span class="eyebrow">02 · Objetivo y workflow</span>
+          <h2>Pipeline metodológico del proyecto</h2>
+        </div>
+
+        <div class="slide-body workflow-layout">
+          <div class="workflow-summary">
+            <div class="statement-panel objective-card">
+              <p class="statement-lead">
+                Construir un modelo capaz de inferir el tipo de propiedad usando texto libre como insumo principal.
+              </p>
+              <p class="statement-note">
+                El trabajo compara modelos clásicos con enfoque TF-IDF y un modelo basado en Transformer bajo
+                restricciones de cómputo local.
               </p>
             </div>
           </div>
-        </section>
 
-        <section class="slide" data-title="Implementacion">
-          <span class="kicker">05 · Implementacion</span>
-          <h2>API local y benchmark servidos desde el mismo backend</h2>
-          <p>
-            La aplicacion expone `GET /salud`, `GET /benchmark`, `POST /predecir` y esta misma presentacion
-            en `GET /presentacion`. La demo final consulta el modelo censurado ganador real del benchmark.
-          </p>
-          <div class="content-grid">
-            <div class="info-card">
-              <h3>Modelo operativo</h3>
-              <p id="implementation-model">-</p>
-            </div>
-            <div class="info-card">
-              <h3>Criterio de seleccion</h3>
-              <p id="implementation-criterion">-</p>
-            </div>
-            <div class="info-card">
-              <h3>Benchmark</h3>
-              <p>La comparativa se carga dinamicamente desde `GET /benchmark`.</p>
+          <figure class="asset-frame asset-frame-large asset-frame-workflow">
+            <img data-asset-src="workflow_nlp_inmobiliario.svg" alt="Workflow del trabajo" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s05_dataset" data-title="Dataset">
+        <div class="slide-header">
+          <span class="eyebrow">03 · Dataset</span>
+          <h2>Datos utilizados y criterio de muestreo</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <div class="text-stack">
+            <p>
+              Se parte de una base de anuncios inmobiliarios de Properati, con foco exclusivo en dos columnas:
+              <code>description</code> y <code>property_type</code>.
+            </p>
+            <p>
+              La muestra operativa fue reducida por restricciones de cómputo. El train se balancea por clase y el
+              test conserva la distribución natural del mercado.
+            </p>
+          </div>
+
+          <figure class="asset-frame">
+            <img data-asset-src="distribucion_train_test.png" alt="Distribución de clases train y test" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s06_escenarios" data-title="Diseño experimental">
+        <div class="slide-header">
+          <span class="eyebrow">04 · Diseño experimental</span>
+          <h2>Escenario base versus escenario censurado</h2>
+        </div>
+
+        <div class="slide-body compare-layout">
+          <article class="comparison-panel">
+            <h3>Escenario base</h3>
+            <p>Los modelos entrenan con las descripciones originales.</p>
+          </article>
+          <article class="comparison-panel comparison-panel-alert">
+            <h3>Escenario censurado</h3>
+            <p>
+              Se eliminan términos explícitos como <code>casa</code>, <code>departamento</code>,
+              <code>depto</code> y <code>ph</code> para medir leakage.
+            </p>
+          </article>
+        </div>
+
+        <div class="table-shell">
+          <div class="asset-fragment" data-asset-fragment="tabla_df_res_notebook01.html">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Clase</th>
+                  <th>Total Registros</th>
+                  <th>Contienen Palabra Clave</th>
+                  <th>Porcentaje (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4">Pendiente de exportacion</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s07_modelos" data-title="Modelos evaluados">
+        <div class="slide-header">
+          <span class="eyebrow">05 · Modelos</span>
+          <h2>Familias evaluadas en el benchmark</h2>
+        </div>
+
+        <div class="slide-body compare-layout">
+          <article class="comparison-panel">
+            <h3>Modelos clásicos</h3>
+            <ul class="clean-list">
+              <li>Naive Bayes</li>
+              <li>SVM</li>
+              <li>Regresión Logística</li>
+              <li>Vectorización TF-IDF</li>
+            </ul>
+          </article>
+          <article class="comparison-panel">
+            <h3>Modelo Transformer</h3>
+            <ul class="clean-list">
+              <li>DistilBERT</li>
+              <li>Fine-tuning limitado por CPU</li>
+              <li>Comparación con 1 y 2 épocas en escenario censurado</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s08_preprocesamiento" data-title="Preprocesamiento">
+        <div class="slide-header">
+          <span class="eyebrow">06 · Preprocesamiento</span>
+          <h2>Estrategias diferenciadas por arquitectura</h2>
+        </div>
+
+        <div class="slide-body compare-layout">
+          <article class="comparison-panel">
+            <h3>Para modelos clásicos</h3>
+            <ul class="clean-list">
+              <li>Minúsculas y eliminación de tildes</li>
+              <li>Stop words y abreviaturas normalizadas</li>
+              <li>N-gramas forzados como <code>3_ambientes</code> y <code>50_m2</code></li>
+            </ul>
+          </article>
+          <article class="comparison-panel">
+            <h3>Para DistilBERT</h3>
+            <ul class="clean-list">
+              <li>Mayor preservacion de lenguaje natural</li>
+              <li>Expansión de abreviaturas</li>
+              <li>Unidades más legibles para inferencia contextual</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s09_metricas" data-title="Métricas">
+        <div class="slide-header">
+          <span class="eyebrow">07 · Métricas</span>
+          <h2>Cómo se evalúa el desempeño</h2>
+        </div>
+
+        <div class="slide-body metric-layout">
+          <article class="metric-panel">
+            <span class="metric-label">Accuracy</span>
+            <strong class="metric-title">Tasa global de aciertos</strong>
+            <p>Mide rendimiento agregado, pero no alcanza por sí sola cuando las clases son desbalanceadas.</p>
+          </article>
+          <article class="metric-panel">
+            <span class="metric-label">F1 Macro</span>
+            <strong class="metric-title">Promedio por clase</strong>
+            <p>Permite ver si el modelo pierde calidad en clases más difíciles o menos frecuentes como PH.</p>
+          </article>
+        </div>
+
+      </section>
+
+      <section class="slide" data-slide-id="s10_resultados_principales" data-title="Resultados principales">
+        <div class="slide-header">
+          <span class="eyebrow">08 · Resultados</span>
+          <h2>Comparación principal de modelos</h2>
+        </div>
+
+        <div class="slide-body evidence-layout">
+          <div class="table-shell">
+            <div id="results-table-fragment" class="asset-fragment" data-asset-fragment="tabla_resultados_principales.html">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th>Modelo</th>
+                    <th>Escenario</th>
+                    <th>Accuracy global</th>
+                    <th>F1 macro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="4">Pendiente de exportacion</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="slide" data-title="Cierre">
-          <span class="kicker">06 · Cierre</span>
-          <h2>Conclusiones del trabajo</h2>
-          <div class="content-grid">
-            <div class="info-card">
-              <h3>Comparacion completa</h3>
-              <p>Los modelos base quedan visibles para fundamentar el costo tecnico de censurar el texto.</p>
-            </div>
-            <div class="info-card">
-              <h3>API final</h3>
-              <p>La inferencia local usa el mejor modelo censurado medido en este CPU.</p>
-            </div>
-            <div class="info-card">
-              <h3>Resultado metodologico</h3>
-              <p>
-                El guardrail de censura se sostuvo como control de leakage, pero no como mejora empirica de
-                rendimiento en esta corrida.
+      <section class="slide" data-slide-id="s11_interpretacion" data-title="Interpretación de resultados">
+        <div class="slide-header">
+          <span class="eyebrow">09 · Interpretación</span>
+          <h2>Por qué un modelo simple resulta competitivo</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <div class="text-stack">
+            <p>
+              En el escenario censurado, la Regresión Logística mantiene un desempeño competitivo frente a DistilBERT,
+              con mejor relación entre costo computacional, facilidad de mantenimiento y trazabilidad.
+            </p>
+            <p>
+              El dominio inmobiliario es breve, descriptivo y altamente lexicalizado; términos como
+              <code>lote</code>, <code>jardín</code>, <code>balcón</code> o <code>expensas</code> siguen cargando gran
+              parte de la señal.
+            </p>
+          </div>
+
+          <div class="panel-grid">
+            <article class="surface-panel">
+              <h3>Hallazgo empírico</h3>
+              <p id="guardrail-hallazgo">
+                En la corrida local, los modelos censurados quedan por debajo de sus equivalentes base.
               </p>
-            </div>
+            </article>
+            <article class="surface-panel">
+              <h3>Lectura metodológica</h3>
+              <p id="guardrail-lectura">
+                La censura se sostiene como control de leakage, no como mejora automática de rendimiento.
+              </p>
+            </article>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="slide slide-demo" data-title="Demo final">
-          <div class="demo-heading">
-            <span class="kicker">07 · Demo final</span>
-            <h2>Consultar el modelo censurado activo</h2>
+      <section class="slide" data-slide-id="s12_caso_ph" data-title="El caso PH">
+        <div class="slide-header">
+          <span class="eyebrow">10 · Clase dificil</span>
+          <h2>PH como categoría semánticamente ambigua</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <figure class="asset-frame">
+            <img data-asset-src="matriz_confusion_reglog_censurado.png" alt="Matriz de confusión Reg Log censurado" />
+          </figure>
+
+          <div class="table-shell ph-table-shell">
+            <table class="results-table ph-results-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Modelo</th>
+                  <th>Escenario</th>
+                  <th>F1 Casa</th>
+                  <th>F1 Departamento</th>
+                  <th>F1 PH</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>0</td>
+                  <td>Bayes</td>
+                  <td>Base</td>
+                  <td>0.8260</td>
+                  <td>0.8667</td>
+                  <td>0.3470</td>
+                </tr>
+                <tr>
+                  <td>1</td>
+                  <td>SVM</td>
+                  <td>Base</td>
+                  <td>0.9036</td>
+                  <td>0.9499</td>
+                  <td>0.5852</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>Reg Log</td>
+                  <td>Base</td>
+                  <td>0.9080</td>
+                  <td>0.9549</td>
+                  <td>0.5852</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>DistilBERT 1 epoch</td>
+                  <td>Base</td>
+                  <td>0.8739</td>
+                  <td>0.9419</td>
+                  <td>0.6718</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>Bayes</td>
+                  <td>Censurado</td>
+                  <td>0.7993</td>
+                  <td>0.8406</td>
+                  <td>0.3214</td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>SVM</td>
+                  <td>Censurado</td>
+                  <td>0.8491</td>
+                  <td>0.9052</td>
+                  <td>0.4244</td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td>Reg Log</td>
+                  <td>Censurado</td>
+                  <td>0.8682</td>
+                  <td>0.9136</td>
+                  <td>0.4630</td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td>DistilBERT 1 epoch</td>
+                  <td>Censurado</td>
+                  <td>0.8411</td>
+                  <td>0.8913</td>
+                  <td>0.3791</td>
+                </tr>
+                <tr>
+                  <td>8</td>
+                  <td>DistilBERT 2 epoch</td>
+                  <td>Censurado</td>
+                  <td>0.8493</td>
+                  <td>0.8918</td>
+                  <td>0.3813</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s13_explicabilidad" data-title="Explicabilidad">
+        <div class="slide-header">
+          <span class="eyebrow">11 · Explicabilidad</span>
+          <h2>Señales útiles versus correlaciones espurias</h2>
+        </div>
+
+        <div class="slide-body compare-layout compare-layout-evidence">
+          <article class="comparison-panel comparison-panel-image-only">
+            <figure class="asset-frame asset-frame-compact">
+              <img data-asset-src="explicabilidad_reglog_tokens.png" alt="Explicabilidad regresión logística" />
+            </figure>
+          </article>
+          <article class="comparison-panel comparison-panel-image-only">
+            <figure class="asset-frame asset-frame-compact">
+              <img data-asset-src="explicabilidad_bayes_alertas.png" alt="Explicabilidad Naive Bayes" />
+            </figure>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s14_lectura_negocio" data-title="Lectura de negocio">
+        <div class="slide-header">
+          <span class="eyebrow">12 · Lectura de negocio</span>
+          <h2>Utilidad operativa con controles</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <div class="panel-grid">
+            <article class="surface-panel">
+              <h3>Sugeridor de tipo</h3>
+              <p>Asistencia para carga y mejora de metadata.</p>
+            </article>
+            <article class="surface-panel">
+              <h3>Auditor de inconsistencias</h3>
+              <p>Detección de casos sospechosos para revisión humana.</p>
+            </article>
+            <article class="surface-panel">
+              <h3>Enriquecedor de catálogo</h3>
+              <p>Insumo para analítica inmobiliaria y productos de datos.</p>
+            </article>
           </div>
 
-          <p class="demo-copy">
-            Ingresar una descripcion libre y ejecutar la prediccion contra la API local. La respuesta incluye el
-            modelo activo y el artefacto usado en la inferencia.
-          </p>
+          <div class="panel-grid">
+            <article class="surface-panel surface-panel-highlight">
+              <h3>Modelo activo</h3>
+              <p id="negocio-modelo">Reg Log · censurado</p>
+            </article>
+            <article class="surface-panel">
+              <h3>Criterio de uso</h3>
+              <p>No debe operar como decision final sin monitoreo, especialmente en casos ambiguos como PH.</p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-          <div class="demo-slide-grid">
+      <section class="slide" data-slide-id="s15_limitaciones" data-title="Limitaciones">
+        <div class="slide-header">
+          <span class="eyebrow">13 · Limitaciones</span>
+          <h2>Límites metodológicos y operativos</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <ul class="clean-list clean-list-dense">
+            <li>Entrenamiento restringido a CPU.</li>
+            <li>Fine-tuning de DistilBERT acotado.</li>
+            <li>Posible sesgo por inmobiliarias o zonas.</li>
+            <li>Ambigüedad real entre clases.</li>
+          </ul>
+
+          <div class="panel-grid">
+            <article class="surface-panel">
+              <h3>Modelo operativo validado</h3>
+              <p id="limitaciones-modelo">Reg Log · censurado</p>
+            </article>
+            <article class="surface-panel">
+              <h3>Criterio de selección</h3>
+              <p id="limitaciones-criterio">
+                Mayor F1 macro; Accuracy como desempate entre modelos censurados.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide slide-demo" data-slide-id="s16_api_demo" data-title="API del modelo">
+        <div class="slide-header">
+          <span class="eyebrow">14 · API del modelo</span>
+          <h2>Componente operativo local y demo de inferencia</h2>
+        </div>
+
+        <div class="slide-body demo-layout">
+          <div class="demo-column">
             <form id="prediction-form" class="prediction-form">
-              <label class="field-label" for="descripcion">Descripcion del inmueble</label>
-              <textarea id="descripcion" name="descripcion" rows="6"
+              <label class="field-label" for="descripcion">Descripción del inmueble</label>
+              <textarea id="descripcion" name="descripcion" rows="7"
                 placeholder="Ejemplo: PH interno de 4 ambientes con patio, entrada independiente y bajas expensas."
                 required></textarea>
 
               <div class="form-actions">
-                <button id="predict-button" class="nav-button nav-button-primary" type="submit">
-                  Predecir clase
-                </button>
-                <button id="sample-button" class="nav-button" type="button">
-                  Cargar ejemplo
-                </button>
+                <button id="predict-button" class="nav-button nav-button-primary" type="submit">Predecir clase</button>
+                <button id="sample-button" class="nav-button" type="button">Cargar ejemplo</button>
               </div>
 
               <div id="demo-message" class="demo-message" role="status">
-                Esperando una descripcion para consultar `POST /predecir`.
+                Esperando descripción para consultar la API local.
               </div>
             </form>
 
@@ -260,9 +559,55 @@
               </div>
             </dl>
           </div>
-        </section>
-      </article>
-    </section>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s17_conclusiones" data-title="Conclusiones">
+        <div class="slide-header">
+          <span class="eyebrow">15 · Conclusiones</span>
+          <h2>Aprendizajes principales del trabajo</h2>
+        </div>
+
+        <div class="slide-body closure-layout">
+          <ol class="number-list">
+            <li>El control de leakage fue un punto metodológico central.</li>
+            <li>La Regresión Logística con TF-IDF fue altamente competitiva.</li>
+            <li>DistilBERT mostro potencial, pero bajo restricciones de recursos.</li>
+            <li>PH emerge como clase estructuralmente ambigua.</li>
+            <li>La explicabilidad permitió detectar señales útiles y artefactos riesgosos.</li>
+            <li>La selección del modelo debe considerar desempeño, costo y mantenibilidad.</li>
+            <li>La API local convierte el benchmark en componente demostrable.</li>
+          </ol>
+
+          <div class="note-band">
+            El valor del trabajo no está solo en clasificar, sino en auditar qué aprende el modelo antes de pensar en
+            uso productivo.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide-id="s18_proximos_pasos" data-title="Próximos pasos">
+        <div class="slide-header">
+          <span class="eyebrow">16 · Próximos pasos</span>
+          <h2>Trabajo futuro</h2>
+        </div>
+
+        <div class="slide-body split-layout">
+          <ul class="clean-list clean-list-dense">
+            <li>Mayor tuning de hiperparámetros.</li>
+            <li>Más épocas de entrenamiento para Transformer.</li>
+            <li>NER para eliminar entidades que generan ruido como CPCI o nombres de inmobiliarias.</li>
+            <li>Incorporación de variables tabulares.</li>
+          </ul>
+          <ul class="clean-list clean-list-dense">
+            <li>Calibración de probabilidades.</li>
+            <li>Umbrales de abstención para casos ambiguos.</li>
+            <li>Evaluación sobre datos nuevos fuera de muestra.</li>
+            <li>Extensión de la API para integración operativa real.</li>
+          </ul>
+        </div>
+      </section>
+    </article>
   </main>
 
   <script src="./presentacion.js" defer></script>

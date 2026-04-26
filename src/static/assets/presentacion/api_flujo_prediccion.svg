@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Flujo de la API local de predicción</title>
+  <desc id="desc">Relación entre la presentación HTML, FastAPI, benchmark final y modelo censurado servido por la API.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#7f9088"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="720" fill="#f8faf8"/>
+  <rect x="26" y="26" width="1228" height="668" rx="26" fill="#ffffff" stroke="#d9e0e4" stroke-width="2.5"/>
+
+  <text x="70" y="92" fill="#141413" font-family="Arial, sans-serif" font-size="34" font-weight="700">
+    API local y demo de inferencia
+  </text>
+  <text x="70" y="130" fill="#5f6b74" font-family="Arial, sans-serif" font-size="20">
+    La presentación consume estado, benchmark y predicción sin recalcular la evidencia analítica principal.
+  </text>
+
+  <g stroke="#7f9088" stroke-width="5" fill="none" marker-end="url(#arrow)">
+    <line x1="302" y1="316" x2="430" y2="316"/>
+    <line x1="618" y1="316" x2="746" y2="316"/>
+    <line x1="934" y1="316" x2="1062" y2="316"/>
+  </g>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="82" y="226" width="220" height="180" rx="24" fill="#e7f3ee" stroke="#006341" stroke-width="3"/>
+    <text x="122" y="274" fill="#006341" font-size="24" font-weight="700">Presentación HTML</text>
+    <text x="118" y="310" fill="#141413" font-size="19">18 slides</text>
+    <text x="118" y="338" fill="#141413" font-size="19">Topbar + progreso</text>
+    <text x="118" y="366" fill="#141413" font-size="19">Demo en slide 16</text>
+
+    <rect x="398" y="226" width="220" height="180" rx="24" fill="#f5f7f6" stroke="#6a9bcc" stroke-width="3"/>
+    <text x="474" y="274" fill="#6a9bcc" font-size="24" font-weight="700">FastAPI</text>
+    <text x="438" y="310" fill="#141413" font-size="18">GET /presentacion</text>
+    <text x="438" y="338" fill="#141413" font-size="18">GET /salud</text>
+    <text x="438" y="366" fill="#141413" font-size="18">GET /benchmark</text>
+    <text x="438" y="394" fill="#141413" font-size="18">POST /predecir</text>
+
+    <rect x="714" y="226" width="220" height="180" rx="24" fill="#f5f7f6" stroke="#788c5d" stroke-width="3"/>
+    <text x="752" y="274" fill="#788c5d" font-size="24" font-weight="700">Benchmark final</text>
+    <text x="754" y="310" fill="#141413" font-size="18">Fecha benchmark</text>
+    <text x="754" y="338" fill="#141413" font-size="18">Modelo API final</text>
+    <text x="754" y="366" fill="#141413" font-size="18">Guardrail censura</text>
+
+    <rect x="1030" y="226" width="170" height="180" rx="24" fill="#f5f7f6" stroke="#d97757" stroke-width="3"/>
+    <text x="1060" y="274" fill="#d97757" font-size="24" font-weight="700">Modelo</text>
+    <text x="1054" y="310" fill="#141413" font-size="18">Reg Log</text>
+    <text x="1054" y="338" fill="#141413" font-size="18">Censurado</text>
+    <text x="1054" y="366" fill="#141413" font-size="18">joblib local</text>
+  </g>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="104" y="474" width="1070" height="136" rx="20" fill="#f8faf8" stroke="#d9e0e4" stroke-width="2"/>
+    <text x="130" y="516" fill="#141413" font-size="21" font-weight="700">Separación de responsabilidades</text>
+    <text x="130" y="552" fill="#5f6b74" font-size="19">
+      La evidencia principal de resultados permanece estática en la deck; la API aporta estado operativo, guardrail vivo y la demo de predicción.
+    </text>
+    <text x="130" y="580" fill="#5f6b74" font-size="19">
+      Si la API falla, la presentación sigue siendo defendible y solo se degrada la parte interactiva de la slide 16.
+    </text>
+  </g>
+</svg>

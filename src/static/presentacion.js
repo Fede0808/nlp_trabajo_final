@@ -1,5 +1,25 @@
 const slides = Array.from(document.querySelectorAll(".slide"));
+const bodyDataset = document.body.dataset;
+
 const apiStatus = document.getElementById("api-status");
+const benchmarkDate = document.getElementById("benchmark-date");
+const heroBenchmarkDate = document.getElementById("hero-benchmark-date");
+const currentSlideLabel = document.getElementById("current-slide");
+const totalSlidesLabel = document.getElementById("total-slides");
+const progressFill = document.getElementById("progress-fill");
+const currentSlideTitle = document.getElementById("current-slide-title");
+const consistencyWarning = document.getElementById("consistency-warning");
+const resultsConsistency = document.getElementById("results-consistency");
+
+const guardrailHallazgo = document.getElementById("guardrail-hallazgo");
+const guardrailLectura = document.getElementById("guardrail-lectura");
+const negocioModelo = document.getElementById("negocio-modelo");
+const negocioGuardrail = document.getElementById("negocio-guardrail");
+const limitacionesModelo = document.getElementById("limitaciones-modelo");
+const limitacionesCriterio = document.getElementById("limitaciones-criterio");
+const liveModelName = document.getElementById("live-model-name");
+const liveModelFamily = document.getElementById("live-model-family");
+const liveModelPath = document.getElementById("live-model-path");
 
 const predictionForm = document.getElementById("prediction-form");
 const predictButton = document.getElementById("predict-button");
@@ -11,38 +31,74 @@ const resultClean = document.getElementById("result-clean");
 const resultModel = document.getElementById("result-model");
 const resultPath = document.getElementById("result-path");
 
-const benchmarkDate = document.getElementById("benchmark-date");
-const bestBaseModel = document.getElementById("best-base-model");
-const bestCensoredModel = document.getElementById("best-censored-model");
-const baseResultsBody = document.getElementById("base-results-body");
-const censoredResultsBody = document.getElementById("censored-results-body");
-const baseSummary = document.getElementById("base-summary");
-const apiModelName = document.getElementById("api-model-name");
-const apiModelPath = document.getElementById("api-model-path");
-const guardrailStatus = document.getElementById("guardrail-status");
-const guardrailHallazgo = document.getElementById("guardrail-hallazgo");
-const guardrailLectura = document.getElementById("guardrail-lectura");
-const implementationModel = document.getElementById("implementation-model");
-const implementationCriterion = document.getElementById("implementation-criterion");
-
 const ejemploDescripcion =
-  "PH interno de 4 ambientes con patio, orientacion sur, entrada independiente y bajas expensas.";
+  "PH interno de 4 ambientes con patio, entrada independiente y bajas expensas.";
 
 let currentSlide = 0;
+let healthState = "loading";
+let benchmarkState = "loading";
 
 function renderSlide(index) {
   currentSlide = Math.max(0, Math.min(index, slides.length - 1));
-
-  slides.forEach((slide, position) => {
-    slide.classList.toggle("is-active", position === currentSlide);
+  slides.forEach((slide, slideIndex) => {
+    slide.classList.toggle("is-active", slideIndex === currentSlide);
   });
 
-  document.title = `TIF NLP | ${slides[currentSlide].dataset.title}`;
+  const activeSlide = slides[currentSlide];
+  currentSlideLabel.textContent = String(currentSlide + 1);
+  totalSlidesLabel.textContent = String(slides.length);
+  currentSlideTitle.textContent = activeSlide.dataset.title;
+  progressFill.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+  document.title = `TIF NLP | ${activeSlide.dataset.title}`;
+}
+
+function apiBaseUrl() {
+  if (window.location.protocol === "file:") {
+    return null;
+  }
+  return window.location.origin;
+}
+
+function assetsBaseUrl() {
+  if (window.location.protocol === "file:") {
+    return "./assets/presentacion";
+  }
+  return `${window.location.origin}/static/assets/presentacion`;
+}
+
+function setApiStatus(label, statusClass) {
+  apiStatus.textContent = label;
+  apiStatus.classList.remove("status-loading", "status-ok", "status-degraded", "status-error");
+  apiStatus.classList.add(statusClass);
+}
+
+function syncOverallStatus() {
+  if (window.location.protocol === "file:") {
+    setApiStatus("Abrir por HTTP", "status-degraded");
+    return;
+  }
+
+  if (healthState === "ok" && (benchmarkState === "ok" || benchmarkState === "warning")) {
+    setApiStatus("Operativa", "status-ok");
+    return;
+  }
+
+  if (healthState === "ok" && benchmarkState === "degraded") {
+    setApiStatus("Benchmark degradado", "status-degraded");
+    return;
+  }
+
+  if (healthState === "degraded" || healthState === "error") {
+    setApiStatus("No disponible", "status-error");
+    return;
+  }
+
+  setApiStatus("Verificando", "status-loading");
 }
 
 function setMessage(message, state = "") {
   demoMessage.textContent = message;
-  demoMessage.classList.remove("is-loading", "is-error", "is-success");
+  demoMessage.classList.remove("is-loading", "is-success", "is-error");
   if (state) {
     demoMessage.classList.add(state);
   }
@@ -55,84 +111,139 @@ function setResults({ clase = "-", limpio = "-", modelo = "-", ruta = "-" } = {}
   resultPath.textContent = ruta;
 }
 
-function apiBaseUrl() {
-  if (window.location.protocol === "file:") {
-    return null;
-  }
-  return window.location.origin;
-}
-
-function formatMetric(value) {
-  return Number(value).toFixed(4);
-}
-
-function renderResultsTable(target, rows) {
-  target.innerHTML = "";
-
-  rows.forEach((row) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${row.modelo}</strong></td>
-      <td>${row.familia}</td>
-      <td>${formatMetric(row.accuracy)}</td>
-      <td>${formatMetric(row.f1_macro)}</td>
-    `;
-    target.appendChild(tr);
+function hydrateAssetImages() {
+  const base = assetsBaseUrl();
+  document.querySelectorAll("img[data-asset-src]").forEach((image) => {
+    image.src = `${base}/${image.dataset.assetSrc}`;
   });
 }
 
-function sortByScore(left, right) {
-  if (right.f1_macro !== left.f1_macro) {
-    return right.f1_macro - left.f1_macro;
+async function hydrateTableFragment() {
+  const base = assetsBaseUrl();
+
+  const fragmentTargets = Array.from(document.querySelectorAll("[data-asset-fragment]"));
+  for (const fragmentTarget of fragmentTargets) {
+    try {
+      const response = await fetch(`${base}/${fragmentTarget.dataset.assetFragment}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const html = await response.text();
+      if (html.trim()) {
+        fragmentTarget.innerHTML = html;
+      }
+    } catch (error) {
+      console.warn("No fue posible cargar un fragmento estático.", {
+        fragment: fragmentTarget.dataset.assetFragment,
+        error,
+      });
+    }
   }
-  return right.accuracy - left.accuracy;
 }
 
-function pickBestByF1(rows) {
-  return [...rows].sort(sortByScore)[0];
+function showConsistencyWarning(message, status = "warning") {
+  consistencyWarning.textContent = message;
+  consistencyWarning.classList.remove("is-hidden");
+  if (resultsConsistency) {
+    resultsConsistency.textContent = message;
+    resultsConsistency.classList.toggle("status-chip", true);
+  }
+  benchmarkState = status;
+  syncOverallStatus();
+}
+
+function hideConsistencyWarning() {
+  consistencyWarning.classList.add("is-hidden");
+  if (resultsConsistency) {
+    resultsConsistency.textContent = "Benchmark alineado con evidencia estática";
+  }
+  benchmarkState = "ok";
+  syncOverallStatus();
+}
+
+function evaluateConsistency(payload) {
+  const expectedDate = bodyDataset.staticBenchmarkDate;
+  const expectedModel = bodyDataset.staticApiModel;
+  const expectedCondition = bodyDataset.staticApiCondition;
+  const liveModel = payload?.modelo_api_final?.modelo;
+  const liveCondition = payload?.modelo_api_final?.condicion;
+  const liveDate = payload?.fecha_benchmark_cpu;
+
+  const problems = [];
+  if (liveDate && expectedDate && liveDate !== expectedDate) {
+    problems.push(`fecha ${liveDate}`);
+  }
+  if (liveModel && expectedModel && liveModel !== expectedModel) {
+    problems.push(`modelo ${liveModel}`);
+  }
+  if (liveCondition && expectedCondition && liveCondition !== expectedCondition) {
+    problems.push(`condición ${liveCondition}`);
+  }
+
+  if (problems.length > 0) {
+    console.warn("Benchmark vivo no alineado con evidencia estática.", {
+      expectedDate,
+      expectedModel,
+      expectedCondition,
+      payload,
+    });
+    showConsistencyWarning("Benchmark vivo no alineado con evidencia estática");
+    return;
+  }
+
+  hideConsistencyWarning();
 }
 
 function hydrateBenchmark(payload) {
-  const rows = payload.resultados || [];
-  const baseRows = rows.filter((row) => row.condicion === "base").sort(sortByScore);
-  const censoredRows = rows.filter((row) => row.condicion === "censurado").sort(sortByScore);
-  const bestBase = pickBestByF1(baseRows);
-  const activeModel = payload.modelo_api_final;
-  const guardrail = payload.guardrail_censura;
+  const liveDate = payload.fecha_benchmark_cpu || bodyDataset.staticBenchmarkDate;
+  benchmarkDate.textContent = liveDate;
+  heroBenchmarkDate.textContent = liveDate;
 
-  benchmarkDate.textContent = "2026-04-27";
-  bestBaseModel.textContent = `${bestBase.modelo} · F1 ${formatMetric(bestBase.f1_macro)}`;
-  bestCensoredModel.textContent = `${activeModel.modelo} · F1 ${formatMetric(activeModel.f1_macro)}`;
-  apiModelName.textContent = `${activeModel.modelo} (${activeModel.condicion})`;
-  apiModelPath.textContent = activeModel.ruta_artefacto.split(/[\\/]/).pop();
-  implementationModel.textContent = `${activeModel.modelo} · ${activeModel.familia}`;
-  implementationCriterion.textContent = activeModel.criterio_seleccion;
+  const guardrail = payload.guardrail_censura || {};
+  const activeModel = payload.modelo_api_final || {};
 
-  renderResultsTable(baseResultsBody, baseRows);
-  renderResultsTable(censoredResultsBody, censoredRows);
+  if (guardrail.hallazgo) {
+    guardrailHallazgo.textContent = guardrail.hallazgo;
+  }
+  if (guardrail.lectura) {
+    guardrailLectura.textContent = guardrail.lectura;
+    if (negocioGuardrail) {
+      negocioGuardrail.textContent = guardrail.lectura;
+    }
+  }
 
-  const bestBaseAccuracy = [...baseRows].sort((left, right) => right.accuracy - left.accuracy)[0];
-  baseSummary.textContent =
-    `Los modelos base quedan por encima de sus versiones censuradas en todos los casos. ` +
-    `${bestBase.modelo} lidera F1 macro (${formatMetric(bestBase.f1_macro)}) y ` +
-    `${bestBaseAccuracy.modelo} lidera accuracy (${formatMetric(bestBaseAccuracy.accuracy)}).`;
+  const modelLabel = activeModel.modelo
+    ? `${activeModel.modelo} · ${activeModel.condicion || "sin condición"}`
+    : "Pendiente de validación";
 
-  guardrailStatus.textContent = guardrail.se_sostiene
-    ? "El guardrail de censura mejoro el rendimiento y se sostiene en esta corrida."
-    : "El guardrail de censura no mejoro las metricas en esta corrida y queda marcado como hallazgo a revisar.";
-  guardrailHallazgo.textContent = guardrail.hallazgo;
-  guardrailLectura.textContent = guardrail.lectura;
+  negocioModelo.textContent = modelLabel;
+  limitacionesModelo.textContent = modelLabel;
+  limitacionesCriterio.textContent =
+    activeModel.criterio_seleccion || limitacionesCriterio.textContent;
+  if (liveModelName) {
+    liveModelName.textContent = activeModel.modelo || "Pendiente";
+  }
+  if (liveModelFamily) {
+    liveModelFamily.textContent = activeModel.familia
+      ? `${activeModel.condicion || "-"} · ${activeModel.familia}`
+      : "Pendiente de validación";
+  }
+  if (liveModelPath) {
+    liveModelPath.textContent = activeModel.ruta_artefacto || "Pendiente de validación";
+  }
+
+  evaluateConsistency(payload);
 }
 
 async function checkHealth() {
   const base = apiBaseUrl();
 
   if (!base) {
-    apiStatus.textContent = "Abrir por HTTP";
-    apiStatus.classList.remove("status-pending", "status-ok");
-    apiStatus.classList.add("status-error");
+    healthState = "degraded";
+    syncOverallStatus();
     setMessage(
-      "Esta presentacion fue abierta con file://. Para usar la API, abrir http://127.0.0.1:8000/presentacion.",
+      "La presentación fue abierta con file://. Para estados vivos y demo, abrir http://127.0.0.1:8000/presentacion.",
       "is-error",
     );
     return;
@@ -143,21 +254,23 @@ async function checkHealth() {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-
-    apiStatus.textContent = "Operativa";
-    apiStatus.classList.remove("status-pending", "status-error");
-    apiStatus.classList.add("status-ok");
+    healthState = "ok";
   } catch (error) {
-    apiStatus.textContent = "No disponible";
-    apiStatus.classList.remove("status-pending", "status-ok");
-    apiStatus.classList.add("status-error");
+    healthState = "error";
   }
+
+  syncOverallStatus();
 }
 
 async function loadBenchmark() {
   const base = apiBaseUrl();
 
   if (!base) {
+    benchmarkState = "degraded";
+    if (resultsConsistency) {
+      resultsConsistency.textContent = "Abrir por HTTP para validar benchmark vivo";
+    }
+    syncOverallStatus();
     return;
   }
 
@@ -169,23 +282,24 @@ async function loadBenchmark() {
     const payload = await response.json();
     hydrateBenchmark(payload);
   } catch (error) {
-    baseResultsBody.innerHTML = `<tr><td colspan="4">No fue posible cargar el benchmark.</td></tr>`;
-    censoredResultsBody.innerHTML = `<tr><td colspan="4">No fue posible cargar el benchmark.</td></tr>`;
-    baseSummary.textContent = "La comparativa final no pudo cargarse desde la API.";
-    guardrailStatus.textContent = "No fue posible recuperar la conclusion metodologica.";
-    guardrailHallazgo.textContent = "-";
-    guardrailLectura.textContent = "-";
+    console.warn("No fue posible recuperar el benchmark vivo.", error);
+    benchmarkState = "degraded";
+    if (resultsConsistency) {
+      resultsConsistency.textContent = "No fue posible validar el benchmark vivo";
+    }
+    syncOverallStatus();
   }
 }
 
 async function handlePrediction(event) {
   event.preventDefault();
+
   const descripcion = descriptionInput.value.trim();
   const base = apiBaseUrl();
 
   if (!base) {
     setMessage(
-      "No se puede consultar la API desde file://. Abrir la presentacion desde http://127.0.0.1:8000/presentacion.",
+      "No se puede consultar la API desde file://. Abrir la presentación desde http://127.0.0.1:8000/presentacion.",
       "is-error",
     );
     setResults();
@@ -193,13 +307,13 @@ async function handlePrediction(event) {
   }
 
   if (!descripcion) {
-    setMessage("Ingresar una descripcion antes de consultar la API.", "is-error");
+    setMessage("Ingresar una descripción antes de consultar la API.", "is-error");
     setResults();
     return;
   }
 
   predictButton.disabled = true;
-  setMessage("Consultando el modelo censurado activo...", "is-loading");
+  setMessage("Consultando el modelo activo...", "is-loading");
 
   try {
     const response = await fetch(`${base}/predecir`, {
@@ -211,7 +325,6 @@ async function handlePrediction(event) {
     });
 
     const payload = await response.json();
-
     if (!response.ok) {
       const detail =
         typeof payload.detail === "string" ? payload.detail : "Error al consultar la API.";
@@ -224,45 +337,48 @@ async function handlePrediction(event) {
       modelo: `${payload.modelo_activo} (${payload.condicion_modelo})`,
       ruta: payload.ruta_modelo,
     });
-    setMessage("Prediccion completada correctamente.", "is-success");
+
+    setMessage("Predicción completada correctamente.", "is-success");
   } catch (error) {
     setResults();
-    setMessage(error.message || "No fue posible obtener una prediccion.", "is-error");
+    setMessage(error.message || "No fue posible obtener una predicción.", "is-error");
   } finally {
     predictButton.disabled = false;
   }
 }
 
-function hydrateFromQueryString() {
-  const params = new URLSearchParams(window.location.search);
-  const descripcion = params.get("descripcion");
+function wireNavigation() {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === "PageDown") {
+      event.preventDefault();
+      renderSlide(currentSlide + 1);
+    }
 
-  if (descripcion) {
-    descriptionInput.value = descripcion;
-    setMessage("Descripcion cargada desde la URL. Se puede ejecutar la prediccion.");
-  }
+    if (event.key === "ArrowLeft" || event.key === "PageUp") {
+      event.preventDefault();
+      renderSlide(currentSlide - 1);
+    }
+  });
 }
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "ArrowRight" || event.key === "PageDown") {
-    event.preventDefault();
-    renderSlide(currentSlide + 1);
-  }
-  if (event.key === "ArrowLeft" || event.key === "PageUp") {
-    event.preventDefault();
-    renderSlide(currentSlide - 1);
-  }
-});
+function wireDemo() {
+  sampleButton.addEventListener("click", () => {
+    descriptionInput.value = ejemploDescripcion;
+    descriptionInput.focus();
+    setMessage("Ejemplo cargado. La demo está lista para consultar la API.");
+  });
 
-sampleButton.addEventListener("click", () => {
-  descriptionInput.value = ejemploDescripcion;
-  descriptionInput.focus();
-  setMessage("Ejemplo cargado. Ahora se puede ejecutar la prediccion.");
-});
+  predictionForm.addEventListener("submit", handlePrediction);
+}
 
-predictionForm.addEventListener("submit", handlePrediction);
+async function init() {
+  renderSlide(0);
+  hydrateAssetImages();
+  wireNavigation();
+  wireDemo();
+  await hydrateTableFragment();
+  await checkHealth();
+  await loadBenchmark();
+}
 
-renderSlide(0);
-hydrateFromQueryString();
-checkHealth();
-loadBenchmark();
+init();

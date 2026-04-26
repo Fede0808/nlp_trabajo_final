@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Workflow del trabajo final de NLP inmobiliario</title>
+  <desc id="desc">Pipeline horizontal desde problema y datos hasta benchmark, explicabilidad y decisión operativa.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f5f7f6"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#7f9088"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="720" fill="#f8faf8"/>
+  <rect x="26" y="26" width="1228" height="668" rx="26" fill="url(#bg)" stroke="#d9e0e4" stroke-width="2.5"/>
+
+  <text x="70" y="94" fill="#141413" font-family="Arial, sans-serif" font-size="34" font-weight="700">
+    Workflow metodológico del proyecto
+  </text>
+  <text x="70" y="132" fill="#5f6b74" font-family="Arial, sans-serif" font-size="20">
+    Del problema de negocio al benchmark final y la decisión operativa de la API local.
+  </text>
+
+  <g stroke="#7f9088" stroke-width="5" fill="none" marker-end="url(#arrow)">
+    <line x1="225" y1="336" x2="302" y2="336"/>
+    <line x1="430" y1="336" x2="507" y2="336"/>
+    <line x1="635" y1="336" x2="712" y2="336"/>
+    <line x1="840" y1="336" x2="917" y2="336"/>
+    <line x1="1045" y1="336" x2="1122" y2="336"/>
+  </g>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="70" y="250" width="155" height="170" rx="22" fill="#e7f3ee" stroke="#006341" stroke-width="3"/>
+    <text x="100" y="295" fill="#006341" font-size="22" font-weight="700">Problema</text>
+    <text x="100" y="326" fill="#141413" font-size="18">Tipificar</text>
+    <text x="100" y="350" fill="#141413" font-size="18">propiedades</text>
+    <text x="100" y="374" fill="#141413" font-size="18">desde texto</text>
+
+    <rect x="275" y="250" width="155" height="170" rx="22" fill="#f5f7f6" stroke="#6a9bcc" stroke-width="3"/>
+    <text x="321" y="295" fill="#6a9bcc" font-size="22" font-weight="700">Datos</text>
+    <text x="300" y="326" fill="#141413" font-size="18">Properati</text>
+    <text x="300" y="350" fill="#141413" font-size="18">description</text>
+    <text x="300" y="374" fill="#141413" font-size="18">property_type</text>
+
+    <rect x="480" y="250" width="155" height="170" rx="22" fill="#f5f7f6" stroke="#788c5d" stroke-width="3"/>
+    <text x="496" y="295" fill="#788c5d" font-size="22" font-weight="700">Corpus</text>
+    <text x="505" y="326" fill="#141413" font-size="18">Muestra 10k</text>
+    <text x="505" y="350" fill="#141413" font-size="18">Train balanceado</text>
+    <text x="505" y="374" fill="#141413" font-size="18">Test natural</text>
+
+    <rect x="685" y="250" width="155" height="170" rx="22" fill="#f5f7f6" stroke="#d97757" stroke-width="3"/>
+    <text x="703" y="295" fill="#d97757" font-size="22" font-weight="700">Modelado</text>
+    <text x="710" y="326" fill="#141413" font-size="18">TF-IDF +</text>
+    <text x="710" y="350" fill="#141413" font-size="18">SVM / Bayes /</text>
+    <text x="710" y="374" fill="#141413" font-size="18">Reg Log / DistilBERT</text>
+
+    <rect x="890" y="250" width="155" height="170" rx="22" fill="#f5f7f6" stroke="#006341" stroke-width="3"/>
+    <text x="915" y="295" fill="#006341" font-size="22" font-weight="700">Evaluación</text>
+    <text x="920" y="326" fill="#141413" font-size="18">Accuracy</text>
+    <text x="920" y="350" fill="#141413" font-size="18">F1 Macro</text>
+    <text x="920" y="374" fill="#141413" font-size="18">Análisis por clase</text>
+
+    <rect x="1095" y="250" width="125" height="170" rx="22" fill="#f5f7f6" stroke="#004f33" stroke-width="3"/>
+    <text x="1115" y="295" fill="#004f33" font-size="22" font-weight="700">Decisión</text>
+    <text x="1114" y="326" fill="#141413" font-size="18">Guardrail</text>
+    <text x="1114" y="350" fill="#141413" font-size="18">Leakage</text>
+    <text x="1114" y="374" fill="#141413" font-size="18">API local</text>
+  </g>
+</svg>
