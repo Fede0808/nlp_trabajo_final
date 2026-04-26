@@ -54,6 +54,13 @@ Comparar modelos de clasificacion (SVM vs. Transformer destilado) para categoriz
 - Notebook Fase 4: `notebooks/02_fase_4_transformer_cpu.ipynb`
 - Configuracion compartida: `src/configuracion_proyecto.py`
 
+## Guia de uso de notebooks
+- Si queres rehacer el flujo completo, ejecuta `notebooks/01_fases_1_a_3_corpus_y_svm.ipynb`.
+- Luego ejecuta `notebooks/02_fase_4_transformer_cpu.ipynb`.
+- Sin reiniciar el kernel ni cerrar la sesion, ejecuta `notebooks/03_fase_5_comparacion_y_explicabilidad.ipynb`.
+- La fase 5 reutiliza predicciones y objetos que la fase 4 deja cargados en memoria; si no estan disponibles, reconstruye las predicciones desde los snapshots locales en `artifacts/`.
+- Si reinicias la sesion, verifica que los snapshots de la fase 4 sigan disponibles antes de correr la fase 5.
+
 ## Benchmark final en CPU
 
 La corrida local consolidada el **26 de abril de 2026** arrojo estos hitos:
