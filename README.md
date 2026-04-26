@@ -20,16 +20,16 @@ Comparar modelos de clasificacion (SVM vs. Transformer destilado) para categoriz
 - Fase 1: muestreo estratificado real implementado (`src/corpus_inmuebles.py`).
 - Fase 2: limpieza unificada compartida entre SVM y Transformer (`src/property_text_pipeline.py`).
 - Fase 3: baseline SVM con metricas, validacion cruzada y matriz de confusion.
-- Fase 4: flujo CPU-only preparado, pero el entrenamiento completo requiere pesos locales del modelo.
-- Fase 5: mini-API local para el SVM disponible en `src/api_local.py`; la comparativa final queda sujeta a correr el transformer.
+- Fase 4: snapshots locales de DistilBERT integrados en `artifacts/` y evaluables en CPU-only.
+- Fase 5: benchmark final corrido localmente en CPU, comparativa completa servida por `GET /benchmark` y mini-API alineada con el mejor modelo censurado.
 
 ## Entregable final esperado
 - Fase 0: auditoria de hardware y politica CPU-only justificable.
 - Fase 1: corpus trazable con muestreo estratificado reproducible.
 - Fase 2: pipeline compartido con columna canonica `texto_limpio`.
 - Fase 3: baseline `TF-IDF + LinearSVC` con validacion cruzada, matriz de confusion y artefacto serializado.
-- Fase 4: transformer destilado en CPU o contingencia formal documentada si faltan pesos locales.
-- Fase 5: tabla comparativa final, analisis de errores por clase y recomendacion tecnica defendible.
+- Fase 4: enfoque profundo reproducible en CPU a partir de snapshots locales integrados.
+- Fase 5: tabla comparativa final, analisis del guardrail de censura y recomendacion tecnica defendible.
 
 ## Plan Maestro e Hitos Academicos
 | Fase | Tarea | Hito de la Consigna |
@@ -48,24 +48,34 @@ Comparar modelos de clasificacion (SVM vs. Transformer destilado) para categoriz
 
 ## Ejecucion rapida
 - Script de control: `python notebooks/00_cpu_shared_cleaning.py`
+- Recalculo del benchmark final y artefacto de API: `python tools/manual_checks/benchmark_final_cpu.py`
 - Notebook Fase 0: `notebooks/00_fase_0_auditoria_cpu.ipynb`
 - Notebook Fases 1-3: `notebooks/01_fases_1_a_3_corpus_y_svm.ipynb`
 - Notebook Fase 4: `notebooks/02_fase_4_transformer_cpu.ipynb`
 - Configuracion compartida: `src/configuracion_proyecto.py`
 
+## Benchmark final en CPU
+
+La corrida local consolidada el **26 de abril de 2026** arrojo estos hitos:
+
+- Mejor modelo base por `F1 macro`: `DistilBERT` (`accuracy=0.9035`, `f1_macro=0.8292`).
+- Mejor modelo base por `accuracy`: `Reg Log` (`accuracy=0.9085`, `f1_macro=0.8161`).
+- Mejor modelo censurado para la API: `Reg Log` (`accuracy=0.8515`, `f1_macro=0.7483`).
+- Hallazgo metodologico: la censura **no** mejoro el rendimiento frente a los modelos base; se conserva como control de leakage y queda explicitada como tension del guardrail.
+
 ## Presentacion interactiva
 
-La presentación contiene 6 slides con resumen ejecutivo, métricas, comparación de modelos y **demo en vivo** que consulta el modelo SVM.
+La presentación contiene 6 slides con resumen ejecutivo, métricas dinámicas, comparación completa base/censurado y **demo en vivo** que consulta el mejor modelo censurado del benchmark final.
 
 ### Requisitos previos
 
-Asegúrate de que el modelo SVM ha sido entrenado y está disponible en `artifacts/modelo_svm.joblib`. Si no existe, ejecuta primero:
+Asegúrate de haber recalculado el benchmark final local para generar el artefacto de la API en `artifacts/modelo_censurado_final.joblib`. Si no existe, ejecuta:
 
 ```bash
-python notebooks/00_cpu_shared_cleaning.py
+python tools/manual_checks/benchmark_final_cpu.py
 ```
 
-O abre y ejecuta el notebook:
+Si además querés regenerar el baseline o revisar la fase clasica, podés ejecutar:
 
 ```bash
 jupyter notebook notebooks/01_fases_1_a_3_corpus_y_svm.ipynb
@@ -85,7 +95,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 INFO:     Started reloader process
 ```
 
-**Nota importante**: La API sirve tanto la presentación como los endpoints de predicción. No necesitas un servidor HTTP adicional.
+**Nota importante**: La API sirve tanto la presentación como los endpoints de benchmark/predicción. No necesitas un servidor HTTP adicional.
 
 ### Paso 2: Abre la presentación en tu navegador
 
@@ -98,7 +108,7 @@ http://localhost:8000/presentacion
 ### Paso 3: Navega y usa la demo
 
 - **Navegar entre slides**: Usa los botones "Anterior" y "Siguiente" o las flechas del teclado (`←` y `→`).
-- **Demo en vivo**: En el panel derecho puedes ingresar una descripción de inmueble y consultar la predicción del modelo SVM en tiempo real.
+- **Demo en vivo**: En el panel derecho puedes ingresar una descripción de inmueble y consultar la predicción del mejor modelo censurado en tiempo real.
 - **Barra de progreso**: Sigue tu avance en las 6 slides.
 - **Cargar ejemplo**: Usa el botón "Cargar ejemplo" para rellenar una descripción de muestra.
 
@@ -110,8 +120,9 @@ http://localhost:8000/presentacion
 
 **Si la demo dice "No disponible":**
 - Verifica que el servidor FastAPI está corriendo (`uvicorn src.api_local:app...`).
-- Asegúrate de que `artifacts/modelo_svm.joblib` existe.
+- Asegúrate de que `artifacts/modelo_censurado_final.joblib` existe.
 - Prueba accediendo a `http://localhost:8000/salud` - debe responder `{"estado": "ok"}`.
+- Prueba accediendo a `http://localhost:8000/benchmark` - debe devolver la tabla comparativa final.
 
 **Para detener el servidor:**
 

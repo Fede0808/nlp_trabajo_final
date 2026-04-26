@@ -3,7 +3,6 @@ from pathlib import Path
 import sys
 
 import pandas as pd
-from transformers import AutoTokenizer
 
 try:
     from IPython.display import display as ipy_display
@@ -51,6 +50,7 @@ from src.infraestructura_cpu import (
 )
 from src.property_text_pipeline import (
     COLUMNA_TEXTO_LIMPIO,
+    COLUMNA_TEXTO_LIMPIO_TRANSFORMER,
     TERMINOS_CLAVE,
     construir_auditoria_terminos,
     construir_ejemplos_limpieza,
@@ -59,6 +59,7 @@ from src.property_text_pipeline import (
 )
 from src.transformer_cpu import (
     NOMBRE_MODELO_TRANSFORMER,
+    cargar_tokenizador_transformer,
     construir_estado_contingencia_transformer,
     relevar_estado_modelo_local,
     resolver_origen_tokenizador,
@@ -171,16 +172,15 @@ mostrar_tabla(
     construir_estado_contingencia_transformer(NOMBRE_MODELO_TRANSFORMER),
 )
 
-origen_tokenizador, tokenizador_es_local = resolver_origen_tokenizador(NOMBRE_MODELO_TRANSFORMER)
-tokenizador = AutoTokenizer.from_pretrained(
-    origen_tokenizador,
-    local_files_only=tokenizador_es_local,
-    fix_mistral_regex=True,
+origen_tokenizador, _ = resolver_origen_tokenizador(NOMBRE_MODELO_TRANSFORMER)
+tokenizador = cargar_tokenizador_transformer(
+    NOMBRE_MODELO_TRANSFORMER,
+    modo_offline=True,
 )
 tokens_del_transformer = tokenizar_para_transformer(
     df_entrenamiento.head(8),
     tokenizador,
-    columna_texto=COLUMNA_TEXTO_LIMPIO,
+    columna_texto=COLUMNA_TEXTO_LIMPIO_TRANSFORMER,
     longitud_maxima=LONGITUD_MAXIMA_TRANSFORMER,
 )
 
@@ -188,5 +188,5 @@ assert "input_ids" in tokens_del_transformer
 assert len(tokens_del_transformer["input_ids"]) == 8
 
 print("Columna de texto (SVM):", COLUMNA_TEXTO_LIMPIO)
-print("Columna de texto (Transformer):", COLUMNA_TEXTO_LIMPIO)
+print("Columna de texto (Transformer):", COLUMNA_TEXTO_LIMPIO_TRANSFORMER)
 print("Origen tokenizador:", origen_tokenizador)

@@ -2,84 +2,91 @@
 
 ## Overview
 
-This repository is a CPU-first academic NLP project focused on classifying real-estate listings in Argentina into `Casa`, `Departamento`, and `PH` from free-text descriptions. Its central goal is not just to train a model, but to compare a classical baseline (`TF-IDF + LinearSVC`) against a distilled Transformer under strict local-hardware constraints, then package the result in a way that is defensible for a final course assignment.
+`nlp_trabajo_final` es un proyecto académico de NLP orientado a clasificar avisos inmobiliarios de Argentina en tres clases (`Casa`, `Departamento`, `PH`) a partir de descripciones textuales. El objetivo técnico del repositorio es comparar un baseline clásico (`TF-IDF + LinearSVC`) contra un flujo Transformer destilado bajo una restricción explícita de ejecución `CPU-only`.
 
-The repo is shaped around reproducibility and academic storytelling. The codebase balances reusable Python modules in `src/`, phase-oriented notebooks in `notebooks/`, local-only datasets in `data/`, and assignment-facing documentation in `doc/`.
+El repositorio combina código reusable, notebooks por fase y documentación de entrega. La intención metodológica es buena: congelar configuración, compartir limpieza textual entre experimentos y mantener una narrativa reproducible para la defensa del trabajo final.
 
 ## Architecture
 
-The repository follows a hybrid structure:
+La estructura real del proyecto queda dividida en cuatro capas:
 
-- `src/` contains the reusable source-of-truth modules.
-- `notebooks/` contains the narrative, phase-by-phase academic workflow.
-- `doc/` contains the assignment context, planning artifacts, and delivery guidance.
-- `artifacts/` stores serialized model outputs, currently including the SVM artifact.
-- `data/` is intentionally unversioned and expected to exist only in the local environment.
+- `src/`: fuente de verdad del pipeline reusable.
+- `notebooks/`: ejecución narrativa por fases y experimentación.
+- `doc/`: contexto académico, planificación y cierre.
+- `data/` y `artifacts/`: insumos y salidas locales no versionadas.
 
-The architecture is organized around the assignment phases:
+Los módulos más importantes son:
 
-- **Hardware and execution policy** in `src/infraestructura_cpu.py`
-- **Corpus loading, filtering, and stratified sampling** in `src/corpus_inmuebles.py`
-- **Shared text cleaning and feature preparation** in `src/property_text_pipeline.py`
-- **Evaluation and reporting helpers** in `src/evaluacion_modelos.py`
-- **Artifact persistence and inference reuse** in `src/artefactos_modelos.py`
-- **Local serving layer** in `src/api_local.py`
-- **Transformer offline/CPU workflow** in `src/transformer_cpu.py`
-- **Shared frozen project settings** in `src/configuracion_proyecto.py`
+- `src/configuracion_proyecto.py`: parámetros compartidos de reproducibilidad.
+- `src/infraestructura_cpu.py`: relevamiento de hardware y política CPU-only.
+- `src/corpus_inmuebles.py`: carga, filtrado, muestreo y split train/test.
+- `src/property_text_pipeline.py`: limpieza, censura de leakage y pipelines clásicos.
+- `src/evaluacion_modelos.py`: métricas, validación cruzada y matrices de confusión.
+- `src/transformer_cpu.py`: disponibilidad offline del modelo, tokenización y entrenamiento CPU.
+- `src/artefactos_modelos.py`: persistencia e inferencia del SVM.
+- `src/api_local.py`: API local y frontend de presentación.
 
-## Key Components
+## Current Repository Shape
 
-- **`src/infraestructura_cpu.py`**: reads hardware constraints, sets conservative Torch thread counts, and suggests sample sizes according to available RAM.
-- **`src/corpus_inmuebles.py`**: loads the core dataset, filters to the three target classes, applies stratified sampling, and performs the train/test split.
-- **`src/property_text_pipeline.py`**: defines the canonical `texto_limpio` column, removes HTML and `_x000d_` noise, preserves domain-critical terms, and builds the SVM pipeline.
-- **`src/evaluacion_modelos.py`**: computes comparable metrics, cross-validation summaries, confusion matrices, and per-class error analysis.
-- **`src/transformer_cpu.py`**: handles tokenizer/model availability, offline cache inspection, dataloader construction, minimal CPU-only training, inference, and dynamic quantization.
-- **`src/artefactos_modelos.py`**: saves and loads the SVM artifact and reuses the same cleaning path for inference.
-- **`src/api_local.py`**: exposes the baseline model through FastAPI with a health endpoint and a prediction endpoint.
-- **`notebooks/00_cpu_shared_cleaning.py`**: acts as a reproducible smoke test that exercises hardware setup, sampling, cleaning, SVM training, evaluation, and Transformer-readiness checks in one run.
+El árbol versionado mezcla tres categorías distintas:
+
+- activos centrales del proyecto: `src/`, `README.md`, notebooks principales y documentación de fase;
+- activos de entrega: presentación HTML/CSS/JS servida por FastAPI;
+- artefactos auxiliares de edición: `diff.patch`, `pyproject.toml.rej`, `add_cells.py`, `fix_notebook.py`, `fix_nb3.py`, `modify_notebook.py`, `modify_notebook_distilbert.py`, `split_notebook.py`, `debug.py`, `test_sample.py`, `test_infer.py`.
+
+Ese tercer grupo no está integrado al flujo documentado y hoy agrega ruido técnico.
 
 ## Technologies Used
 
-- **Language**: Python 3.11+
-- **ML / NLP**: `scikit-learn`, `torch`, `transformers`
-- **Data handling**: `pandas`
-- **Serving**: `fastapi`, `uvicorn`
-- **Notebook workflow**: `ipykernel`, Jupyter notebooks
-- **Visualization dependencies**: `matplotlib`, `seaborn`
-- **Environment management**: `uv`, local `.venv`
+- Python 3.11+
+- `pandas`
+- `scikit-learn`
+- `torch`
+- `transformers`
+- `fastapi`
+- `uvicorn`
+- `matplotlib`
+- `seaborn`
+- `uv`
 
 ## Data Flow
 
-The main data path is straightforward and intentionally traceable:
+El flujo principal es:
 
-1. Raw CSV rows are loaded from `data/entrenamiento.csv`.
-2. Listings are filtered to `Casa`, `Departamento`, and `PH`.
-3. A stratified sample is taken, then split into train and test sets with a fixed seed.
-4. Text is normalized into the canonical `texto_limpio` column.
-5. The same cleaned text powers both model families:
-   - the SVM consumes it through `TfidfVectorizer`
-   - the Transformer consumes it through tokenization without additional cleaning logic
-6. Evaluation helpers convert predictions into global metrics, confusion matrices, and class-specific diagnostics.
-7. The trained SVM pipeline is serialized into `artifacts/modelo_svm.joblib` and reused by the API.
+1. Se carga `data/entrenamiento.csv`.
+2. Se filtran las tres clases objetivo.
+3. Se construye una muestra estratificada condicionada por hardware.
+4. Se separa train/test.
+5. Se agregan columnas limpias para SVM y Transformer.
+6. El baseline SVM se entrena, evalúa y serializa.
+7. La API reutiliza el artefacto SVM para inferencia local.
+8. El flujo Transformer depende de la disponibilidad offline del tokenizador y de los pesos.
 
 ## Team and Ownership
 
-All visible commits in the repository are authored by **Federico Blasco**, and the current design suggests a single-maintainer workflow. That shows up in the repo shape: the documentation, modules, and notebooks move in lockstep rather than through separate feature branches or merge-heavy collaboration.
+El historial visible muestra trabajo de dos personas:
 
-The current ownership pattern is:
+- **Federico Blasco**: 12 commits. Lidera el scaffold, la documentación, los módulos base en `src/`, la API local y la presentación final.
+- **Juan Salgado Salter**: 2 commits. Su aporte está concentrado en ajustes metodológicos relevantes: balanceo de train/test, censura de leakage, explicabilidad, guardado de modelos y expansión de notebooks.
 
-- **Documentation and assignment framing**: `doc/`, `README.md`, `instructions.md`
-- **Reusable pipeline modules**: `src/`
-- **Academic execution narrative**: `notebooks/`
-- **Operational output**: `artifacts/`
+El patrón de colaboración no es el de un equipo paralelo sostenido, sino el de una integración corta sobre `main`, con un pico de actividad entre el 19 y el 25 de abril de 2026 y un merge final el 25 de abril de 2026.
+
+## Technical Assessment
+
+Fortalezas:
+
+- Hay una separación razonable entre lógica reusable y narrativa de notebook.
+- La restricción CPU-only está explicitada y atraviesa diseño, documentación y API.
+- La fase de cierre incorporó una presentación navegable y una demo local.
+
+Debilidades:
+
+- Hay artefactos accidentales versionados en la raíz.
+- Los archivos `REPOSITORY_SUMMARY.md` y `THE_STORY_OF_THIS_REPO.md` estaban desactualizados y describían un repo distinto.
+- No hay un flujo de tests automatizados operativo en el entorno actual.
+- La verificación “smoke test” del Transformer usa la columna SVM en lugar de la columna específica del Transformer.
+- El tokenizador puede intentar descargar recursos de red cuando no existe caché local, lo que contradice parcialmente la narrativa offline.
 
 ## Current State
 
-The repository has reached a strong “deliverable baseline” state:
-
-- The SVM baseline is operational and serialized.
-- The API layer is functional around the baseline.
-- The shared preprocessing path is in place.
-- The Transformer workflow exists and now includes explicit contingency handling for offline weight availability.
-
-At the time of analysis, the working tree also contains uncommitted changes focused on delivery hardening: centralized project configuration, richer evaluation summaries, and stronger documentation around the Transformer contingency. That means the repository is currently in the middle of shifting from “working prototype” to “defensible final submission.”
+Al 26 de abril de 2026, el repo está limpio desde Git (`main` sincronizado con `origin/main`) y representa un entregable funcional, pero con deuda de prolijidad. El baseline SVM y la API local parecen estar en estado utilizable; el camino Transformer está preparado conceptualmente, aunque todavía tiene dependencia operativa de caché/pesos locales y señales de verificación incompleta.

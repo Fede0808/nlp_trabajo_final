@@ -1,128 +1,115 @@
-# The Story of This Repo
+# The Story of nlp_trabajo_final
 
-## The Opening Move
+## The Build Window
 
-This repository does not tell the story of a sprawling product team. It tells the story of a focused academic build sprint. On **April 19, 2026**, the project appears almost fully formed in a sequence of seven commits, all authored by **Federico Blasco**, moving from scaffold to a CPU-aware NLP pipeline in a single day.
+Este repositorio no creció lentamente. Se armó en una ventana muy corta y muy intensa entre el **19 y el 25 de abril de 2026**. En esos siete días quedó definido casi todo: estructura, consigna, pipeline reutilizable, notebooks, controles de reproducibilidad, fase Transformer y una presentación final servida por API.
 
-That compressed timeline matters. This is not a repo that grew over months of feature pressure. It is a repo that was assembled with a clear destination already in mind: a final assignment that needed technical rigor, reproducibility, and a convincing narrative.
+El historial no muestra una evolución larga; muestra un cierre académico con varias capas superpuestas en pocos días.
 
-## The Chronicles: A Year in Numbers
+## A Year in Numbers
 
-- **Total commits**: 7
-- **Commits in the last year**: 7
-- **Active months in the last year**: 1
-- **Active month by volume**: 2026-04 with all 7 commits
-- **Merge commits**: 0
-- **Visible contributors**: 1
+- Commits totales: `14`
+- Commits en el último año: `14`
+- Contribuyentes visibles: `2`
+- Meses activos en el último año: `1`
+- Mes más activo: `2026-04`
+- Merge commits visibles: `1`
 
-The numbers say this is a young repository, but not an accidental one. The lack of merges and the single-author history suggest an intentional solo effort rather than an evolving shared codebase.
+Distribución por autor:
+
+- `Federico Blasco`: `12` commits
+- `Juan Salgado Salter`: `2` commits
 
 ## Cast of Characters
 
 ### Federico Blasco
 
-Federico is effectively the entire cast, but the commit history still reveals changing roles:
+Federico aparece como responsable del armazón del repositorio y de su capa de entrega:
 
-- **Project framer** in `chore: initial project scaffold`
-- **Assignment archivist** in `chore: add doc directory for assignment files`
-- **Constraint setter** in `chore: add assignment prompt and context`
-- **Process designer** in `chore: git hygiene and project management docs`
-- **Builder** in `feat: add cpu-only nlp pipeline modules`
-- **Narrator** in `docs: add project notebooks and progress tracking`
-- **Environment custodian** in `chore: ignore local workspace settings`
+- crea el scaffold inicial;
+- incorpora la consigna y el contexto;
+- ordena la higiene de Git y la planificación;
+- sube los módulos CPU-only en `src/`;
+- documenta fases y configuración reproducible;
+- agrega la API local y la presentación final.
 
-That progression is telling: the repo begins with structure and rules before it earns its models. The author does not start by training. He starts by making the work legible.
+Su firma domina la arquitectura y la narrativa del proyecto.
 
-## Seasonal Patterns
+### Juan Salgado Salter
 
-There is only one visible season here, and it is intense: **April 2026**.
+Juan interviene menos veces, pero en zonas metodológicas importantes:
 
-Instead of a long arc with quiet months and bursts of delivery, this repository shows a concentrated build window. That often happens in academic projects: the timeline is external, the milestones are known ahead of time, and the repo is created when the work becomes concrete enough to need disciplined reproducibility.
+- balanceo y redefinición de `train/test`;
+- censura de leakage por clase;
+- explicabilidad;
+- guardado de modelos;
+- ampliación de notebooks y comparativa final.
 
-In other words, this is less “product drift over time” and more “mission assembly.”
+También introduce bastante tooling ad hoc en la raíz, lo que sugiere trabajo práctico de ajuste rápido sobre notebooks, con costo posterior de prolijidad.
 
-## The Great Themes
+## The Main Themes
 
-### 1. Constraints before ambition
+### 1. CPU-only as a real design constraint
 
-The most important story in this repo is not “train a model.” It is “train something defensible on a normal CPU machine.” The project repeatedly encodes that constraint:
+La historia principal del repo no es “entrenar un clasificador”, sino “hacerlo defendible en hardware común”. Esa restricción aparece en:
 
-- conservative Torch thread settings
-- RAM-aware sample sizing
-- distilled Transformer choice instead of a larger BERT variant
-- dynamic quantization for CPU inference
+- relevamiento de hardware;
+- tamaño de muestra guiado por RAM;
+- batch size conservador;
+- contingencia explícita para el Transformer.
 
-This repo treats hardware limits as a first-class design input, not an afterthought.
+### 2. Fair comparison between model families
 
-### 2. Shared preprocessing as a fairness contract
+El equipo intentó que la comparación entre SVM y Transformer no se apoye en pipelines incompatibles. Eso explica la aparición de columnas canónicas de texto limpio, métricas comparables y análisis por clase.
 
-Another strong theme is fairness in comparison. The canonical `texto_limpio` column is more than a convenience; it is a methodological commitment. By ensuring that both the SVM and the Transformer consume the same cleaned text foundation, the repo protects the comparison from turning into an apples-to-oranges benchmark.
+### 3. Documentation became part of the deliverable
 
-### 3. Academic narrative as architecture
+La documentación no llegó al final como agregado superficial. Hay una secuencia clara:
 
-Many codebases bolt documentation on later. This one bakes the course structure directly into the repo:
+- primero contexto y reglas;
+- después módulos reutilizables;
+- luego notebooks;
+- finalmente README, contingencias y presentación.
 
-- `Fase 0` through `Fase 5`
-- notebooks aligned to those phases
-- planning documents in `doc/`
-- a local API because the assignment requires something operational, not just analytical
+Eso es consistente con un trabajo final que necesita ser mostrado, no solo ejecutado.
 
-The architecture reflects the rubric.
+## Turning Points
 
-## Plot Twists and Turning Points
+### April 19, 2026: scaffold to system
 
-### Turning point 1: from scaffolding to rules
+El commit `feat: add cpu-only nlp pipeline modules` es el punto donde el repositorio deja de ser carpeta de trabajo y pasa a ser sistema. Desde ahí ya existen hardware helpers, corpus, limpieza, evaluación, artefactos y API.
 
-The first commits are chores, but they are not empty chores. They define the repo boundaries, the assignment framing, and the hygiene rules. This creates a project that knows what it is supposed to be before it contains much code.
+### April 22-24, 2026: methodological hardening
 
-### Turning point 2: the pipeline lands in one shot
+Entre los commits de Federico y Juan aparecen los cambios más académicamente sensibles:
 
-The commit `feat: add cpu-only nlp pipeline modules` is the repo’s real act break. That is where the codebase stops being a prepared workspace and becomes a system:
+- balanceo de entrenamiento;
+- redefinición de train/test;
+- control de leakage;
+- métricas ampliadas;
+- notas de contingencia del Transformer.
 
-- hardware helpers
-- corpus preparation
-- cleaning
-- evaluation
-- artifact storage
-- API
-- Transformer support
+Ese tramo es el corazón técnico del trabajo del equipo.
 
-That single commit carries most of the operational identity of the repository.
+### April 25, 2026: delivery layer
 
-### Turning point 3: the notebooks make it teachable
+El cierre con `src/static/presentacion.*` y `src/api_local.py` convierte el proyecto en una demo navegable. Ese paso no mejora el modelo, pero sí mejora mucho la defensa del entregable.
 
-The later docs commit adds notebooks and progress tracking. That move transforms the repo from “engine” to “submission.” The code now has a guided tour, which matters in an academic setting where explanation is part of the deliverable.
+## Where the Repo Stands Now
 
-### Turning point 4: the Transformer becomes a logistical problem
+El estado actual es sólido como entrega académica, pero mixto como repositorio técnico. Lo mejor está en:
 
-The current uncommitted work introduces a subtle but important shift. The Transformer phase is no longer just a modeling task; it becomes a logistics and reproducibility task centered on offline weight availability. The repo now explicitly distinguishes between:
+- la separación entre código reusable y notebooks;
+- la conciencia explícita sobre restricciones de hardware;
+- la capacidad de mostrar una demo local.
 
-- having the tokenizer cached
-- having the actual model weights cached
-- being able to complete the deep-learning phase offline
+La deuda aparece en:
 
-That is a mature move. It turns a vague blocker into a documented condition.
+- residuos de edición versionados;
+- scripts de “test” que no son tests automatizados;
+- documentos de análisis que habían quedado viejos;
+- validaciones parciales del flujo Transformer.
 
-## The Current Chapter
+## Bottom Line
 
-Right now, the repository is in its “hardening for delivery” chapter.
-
-The baseline path is strong:
-
-- the SVM is trained and serializable
-- the API serves the baseline
-- the smoke test script produces metrics, confusion matrices, and class-level diagnostics
-
-The deep-learning path is closer than before, but still conditional:
-
-- the repo had a prepared Transformer workflow
-- the local cache now includes tokenizer access
-- the remaining question has been whether the model weights exist locally and can be used offline in a fully reproducible way
-
-The latest layer of work pushes the repo toward something stronger than a technical experiment: a submission that can explain its own limits honestly. That may end up being the defining quality of the project. Not just that it compares SVM and Transformers, but that it does so under real-world CPU constraints, with explicit evidence, and without pretending the environment is more generous than it is.
-
-## What This Repo Is Really About
-
-On the surface, this is a text classification repository about Argentine real-estate listings.
-
-Underneath, it is a repo about making an ambitious NLP assignment fit inside ordinary local hardware without losing methodological dignity. It is a small codebase with a very clear personality: practical, constrained, academically accountable, and increasingly self-aware about the difference between “the code exists” and “the result is truly reproducible.”
+La historia de este repo es la de un equipo pequeño que logró pasar de consigna a demo funcional en menos de una semana. Federico empujó la arquitectura y la narrativa general; Juan aportó ajustes metodológicos de alto impacto. El resultado no está desordenado por falta de trabajo: está desordenado por velocidad de cierre. Esa diferencia importa, porque la base técnica existe, pero necesita un último barrido de higiene para que el repositorio esté a la altura del entregable.

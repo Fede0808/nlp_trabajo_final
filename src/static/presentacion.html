@@ -19,7 +19,7 @@
     </div>
     <div class="header-side">
       <div class="header-summary">
-        Clasificacion de avisos inmobiliarios con enfoque clasico y profundo
+        Benchmark final corrido en CPU con comparacion completa entre modelos base y censurados.
       </div>
       <div class="status-group">
         <span class="status-label">API</span>
@@ -30,254 +30,239 @@
 
   <main class="presentation-shell">
     <section class="deck-column">
-      <nav class="deck-nav" aria-label="Navegacion de filminas">
-        <button id="prev-slide" class="nav-button" type="button">Anterior</button>
-        <div class="deck-progress">
-          <span id="slide-counter">1 / 6</span>
-          <div class="progress-track">
-            <div id="progress-bar" class="progress-bar"></div>
-          </div>
-        </div>
-        <button id="next-slide" class="nav-button" type="button">Siguiente</button>
-      </nav>
-
       <article class="slides" id="slides-root">
         <section class="slide slide-hero is-active" data-title="Portada">
           <span class="kicker kicker-light">Trabajo Integrador Final</span>
-          <h1>TIF: Clasificacion de Avisos Inmobiliarios</h1>
+          <h1>Clasificacion de Avisos Inmobiliarios</h1>
           <p class="hero-subtitle">
-            Enfoque clasico y profundo sobre el mismo corpus reproducible
+            Generacion de una tipologia ad hoc basada en la descripcion para mejorar la busqueda del usuario.
           </p>
           <div class="hero-meta">
-            <span>Mismo split</span>
+            <span>Fecha benchmark: <strong id="benchmark-date">2026-04-27</strong></span>
             <span>CPU-only</span>
-            <span>Mini-API local</span>
+            <span>API + HTML conectados al mismo benchmark</span>
           </div>
         </section>
 
-        <section class="slide" data-title="Problema y corpus">
-          <span class="kicker">01 · Problema y corpus</span>
-          <h2>Muestreo y preprocesamiento</h2>
+        <section class="slide" data-title="Problema y criterio">
+          <span class="kicker">01 · Problema y criterio</span>
+          <h2>Un mismo split para dos lecturas distintas</h2>
           <p>
-            El proyecto aborda la clasificacion de avisos inmobiliarios a partir
-            de texto libre (`description`) y busca predecir `Departamento`,
-            `Casa` o `PH` con una configuracion reproducible.
+            El trabajo compara modelos clasicos y profundos sobre el mismo corpus reproducible. La lectura
+            global incluye todos los modelos, mientras que la decision operativa de la API se toma solo dentro
+            del subconjunto censurado para respetar el guardrail metodologico del trabajo.
           </p>
           <div class="content-grid">
             <div class="info-card">
-              <h3>Dataset operativo</h3>
-              <p>`data/entrenamiento.csv` con texto y etiqueta objetivo.</p>
+              <h3>Lectura global</h3>
+              <p>Sirve para ver el rendimiento de los modelos base y dimensionar el costo de aplicar censura.</p>
             </div>
             <div class="info-card">
-              <h3>Particion unificada</h3>
-              <p>Muestra de 10.000 casos, con 8.000 en train y 2.000 en test.</p>
+              <h3>Lectura operativa</h3>
+              <p>El modelo activo de la API se elige solo entre los censurados, priorizando `F1 macro`.</p>
             </div>
             <div class="info-card">
-              <h3>Reproducibilidad</h3>
-              <p>Semilla 42 y la misma particion para SVM y DistilBERT.</p>
+              <h3>Guardrail</h3>
+              <p>Si la censura no mejora el comportamiento, se explicita como hallazgo y no se maquilla.</p>
             </div>
           </div>
-          <ul class="bullet-list">
-            <li>Preprocesamiento sobre la columna canonica `texto_limpio`.</li>
-            <li>Escenario censurado como control de data leakage.</li>
-            <li>Mismos casos para todos los modelos; cambia solo el tratamiento del texto.</li>
-          </ul>
-        </section>
-
-        <section class="slide" data-title="Baseline SVM">
-          <span class="kicker">02 · Baseline clasico</span>
-          <h2>TF-IDF + SVM como artefacto principal</h2>
-          <p>
-            El baseline clasico es el modelo operativo del proyecto. Combina
-            representacion TF-IDF con SVM y se persiste como
-            `artifacts/modelo_svm.joblib` para inferencia local.
-          </p>
           <div class="metrics-grid">
             <div class="metric-card">
-              <span>Accuracy Base</span>
-              <strong>0.8992</strong>
-            </div>
-            <div class="metric-card">
-              <span>F1 Macro Base</span>
-              <strong>0.7904</strong>
+              <span>Mejor base por F1 macro</span>
+              <strong id="best-base-model">-</strong>
             </div>
             <div class="metric-card metric-card-alert">
-              <span>Accuracy Censurado</span>
-              <strong>0.8427</strong>
-            </div>
-            <div class="metric-card metric-card-alert">
-              <span>F1 Macro Censurado</span>
-              <strong>0.7185</strong>
+              <span>Mejor censurado para API</span>
+              <strong id="best-censored-model">-</strong>
             </div>
           </div>
         </section>
 
-        <section class="slide" data-title="DistilBERT">
-          <span class="kicker">03 · Enfoque profundo</span>
-          <h2>DistilBERT CPU-only bajo presupuesto controlado</h2>
+        <section class="slide" data-title="Modelos base">
+          <span class="kicker">02 · Modelos base</span>
+          <h2>Comparacion global sin censura</h2>
           <p>
-            El enfoque profundo se implemento con
-            `distilbert-base-multilingual-cased`, ejecutado con
-            `max_length=128`, `batch_size=4` y `epochs=1`.
-          </p>
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <span>Accuracy Base</span>
-              <strong>0.8897</strong>
-            </div>
-            <div class="metric-card">
-              <span>F1 Macro Base</span>
-              <strong>0.7847</strong>
-            </div>
-            <div class="metric-card metric-card-alert">
-              <span>Accuracy Censurado</span>
-              <strong>0.7254</strong>
-            </div>
-            <div class="metric-card metric-card-alert">
-              <span>F1 Macro Censurado</span>
-              <strong>0.6265</strong>
-            </div>
-          </div>
-          <p class="note">
-            El `LOAD REPORT` es esperable en fine-tuning sobre checkpoint base:
-            la cabeza de clasificacion se inicializa desde cero.
-          </p>
-        </section>
-
-        <section class="slide" data-title="Comparacion">
-          <span class="kicker">04 · Comparacion metodologica</span>
-          <h2>Resultados y leakage</h2>
-          <p>
-            Ambos enfoques se evaluaron sobre el mismo corpus, las mismas clases
-            y el mismo split. El escenario censurado se uso para medir impacto
-            del leakage sobre la señal linguistica.
+            Estos resultados muestran la señal maxima disponible cuando el texto conserva terminos que pueden
+            introducir leakage. Sirven como referencia para entender que se pierde al aplicar el guardrail.
           </p>
           <table class="results-table">
             <thead>
               <tr>
                 <th>Modelo</th>
-                <th>Base</th>
-                <th>Censurado</th>
+                <th>Familia</th>
+                <th>Accuracy</th>
+                <th>F1 macro</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="base-results-body">
               <tr>
-                <td><strong>SVM</strong></td>
-                <td>0.8992 / 0.7904</td>
-                <td>0.8427 / 0.7185</td>
-              </tr>
-              <tr>
-                <td><strong>DistilBERT</strong></td>
-                <td>0.8897 / 0.7847</td>
-                <td>0.7254 / 0.6265</td>
+                <td colspan="4">Cargando benchmark...</td>
               </tr>
             </tbody>
           </table>
-          <p class="note">
-            Conclusion tecnica: el baseline SVM resulta mas resiliente bajo el
-            presupuesto de computo actual y queda como artefacto principal de inferencia.
+          <p id="base-summary" class="note">
+            Cargando lectura de modelos base...
           </p>
+        </section>
+
+        <section class="slide" data-title="Modelos censurados">
+          <span class="kicker">03 · Modelos censurados</span>
+          <h2>Subconjunto de decision para la API</h2>
+          <p>
+            La API final se apoya solo en este subconjunto. El criterio de seleccion es `F1 macro`, con
+            `accuracy` como desempate si hiciera falta.
+          </p>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Familia</th>
+                <th>Accuracy</th>
+                <th>F1 macro</th>
+              </tr>
+            </thead>
+            <tbody id="censored-results-body">
+              <tr>
+                <td colspan="4">Cargando benchmark...</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="metrics-grid">
+            <div class="metric-card metric-card-alert">
+              <span>Modelo activo de la API</span>
+              <strong id="api-model-name">-</strong>
+            </div>
+            <div class="metric-card">
+              <span>Ruta del artefacto</span>
+              <strong id="api-model-path">-</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" data-title="Guardrail">
+          <span class="kicker">04 · Guardrail metodologico</span>
+          <h2>La censura no mejoro las metricas y eso queda declarado</h2>
+          <p id="guardrail-status" class="note">
+            Cargando conclusion metodologica...
+          </p>
+          <div class="content-grid">
+            <div class="info-card">
+              <h3>Hallazgo</h3>
+              <p id="guardrail-hallazgo">-</p>
+            </div>
+            <div class="info-card">
+              <h3>Lectura tecnica</h3>
+              <p id="guardrail-lectura">-</p>
+            </div>
+            <div class="info-card">
+              <h3>Decision final</h3>
+              <p>
+                Aun asi, la demo y la API quedan alineadas con el mejor modelo censurado para respetar el guardrail
+                definido en la consigna.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section class="slide" data-title="Implementacion">
           <span class="kicker">05 · Implementacion</span>
-          <h2>Mini-API local y demo en vivo</h2>
+          <h2>API local y benchmark servidos desde el mismo backend</h2>
           <p>
-            La aplicacion expone `GET /salud`, `POST /predecir` y esta misma
-            presentacion en `GET /presentacion`. La demo lateral usa el backend
-            real del proyecto.
+            La aplicacion expone `GET /salud`, `GET /benchmark`, `POST /predecir` y esta misma presentacion
+            en `GET /presentacion`. La demo final consulta el modelo censurado ganador real del benchmark.
           </p>
           <div class="content-grid">
             <div class="info-card">
-              <h3>Artefacto</h3>
-              <p>`artifacts/modelo_svm.joblib`</p>
+              <h3>Modelo operativo</h3>
+              <p id="implementation-model">-</p>
             </div>
             <div class="info-card">
-              <h3>Backend</h3>
-              <p>FastAPI servido en localhost</p>
+              <h3>Criterio de seleccion</h3>
+              <p id="implementation-criterion">-</p>
             </div>
             <div class="info-card">
-              <h3>Uso correcto</h3>
-              <p>Abrir por HTTP, no con `file://`</p>
+              <h3>Benchmark</h3>
+              <p>La comparativa se carga dinamicamente desde `GET /benchmark`.</p>
             </div>
           </div>
         </section>
 
         <section class="slide" data-title="Cierre">
           <span class="kicker">06 · Cierre</span>
-          <h2>Estado final del trabajo</h2>
-          <p>
-            La entrega cubre la consigna completa: problema real, corpus
-            reproducible, dos enfoques, comparacion tecnica, mini-API local y
-            consideraciones metodologicas.
-          </p>
+          <h2>Conclusiones del trabajo</h2>
           <div class="content-grid">
             <div class="info-card">
-              <h3>Consigna</h3>
-              <p>Problema, corpus, comparacion, API y cierre defendible.</p>
+              <h3>Comparacion completa</h3>
+              <p>Los modelos base quedan visibles para fundamentar el costo tecnico de censurar el texto.</p>
             </div>
             <div class="info-card">
-              <h3>Mensaje tecnico</h3>
-              <p>SVM gana bajo CPU restringido; DistilBERT cumple como contraste profundo.</p>
+              <h3>API final</h3>
+              <p>La inferencia local usa el mejor modelo censurado medido en este CPU.</p>
             </div>
             <div class="info-card">
-              <h3>Demo</h3>
-              <p>Inferencia local disponible desde la misma app.</p>
+              <h3>Resultado metodologico</h3>
+              <p>
+                El guardrail de censura se sostuvo como control de leakage, pero no como mejora empirica de
+                rendimiento en esta corrida.
+              </p>
             </div>
+          </div>
+        </section>
+
+        <section class="slide slide-demo" data-title="Demo final">
+          <div class="demo-heading">
+            <span class="kicker">07 · Demo final</span>
+            <h2>Consultar el modelo censurado activo</h2>
+          </div>
+
+          <p class="demo-copy">
+            Ingresar una descripcion libre y ejecutar la prediccion contra la API local. La respuesta incluye el
+            modelo activo y el artefacto usado en la inferencia.
+          </p>
+
+          <div class="demo-slide-grid">
+            <form id="prediction-form" class="prediction-form">
+              <label class="field-label" for="descripcion">Descripcion del inmueble</label>
+              <textarea id="descripcion" name="descripcion" rows="6"
+                placeholder="Ejemplo: PH interno de 4 ambientes con patio, entrada independiente y bajas expensas."
+                required></textarea>
+
+              <div class="form-actions">
+                <button id="predict-button" class="nav-button nav-button-primary" type="submit">
+                  Predecir clase
+                </button>
+                <button id="sample-button" class="nav-button" type="button">
+                  Cargar ejemplo
+                </button>
+              </div>
+
+              <div id="demo-message" class="demo-message" role="status">
+                Esperando una descripcion para consultar `POST /predecir`.
+              </div>
+            </form>
+
+            <dl class="result-list">
+              <div>
+                <dt>Clase predicha</dt>
+                <dd id="result-class">-</dd>
+              </div>
+              <div>
+                <dt>Texto limpio</dt>
+                <dd id="result-clean">-</dd>
+              </div>
+              <div>
+                <dt>Modelo activo</dt>
+                <dd id="result-model">-</dd>
+              </div>
+              <div>
+                <dt>Ruta del modelo</dt>
+                <dd id="result-path">-</dd>
+              </div>
+            </dl>
           </div>
         </section>
       </article>
     </section>
-
-    <aside class="demo-column">
-      <section class="demo-panel">
-        <div class="demo-heading">
-          <span class="kicker">Demo en vivo</span>
-          <h2>Consultar el clasificador local</h2>
-        </div>
-
-        <p class="demo-copy">
-          Ingresar una descripcion libre y ejecutar la prediccion contra la API
-          local. Si abriste esta pagina con `file://`, la demo no va a poder
-          hablar con el backend.
-        </p>
-
-        <form id="prediction-form" class="prediction-form">
-          <label class="field-label" for="descripcion">Descripcion del inmueble</label>
-          <textarea id="descripcion" name="descripcion" rows="8"
-            placeholder="Ejemplo: PH interno de 4 ambientes con patio, entrada independiente y bajas expensas."
-            required></textarea>
-
-          <div class="form-actions">
-            <button id="predict-button" class="nav-button nav-button-primary" type="submit">
-              Predecir clase
-            </button>
-            <button id="sample-button" class="nav-button" type="button">
-              Cargar ejemplo
-            </button>
-          </div>
-        </form>
-
-        <div id="demo-message" class="demo-message" role="status">
-          Esperando una descripcion para consultar `POST /predecir`.
-        </div>
-
-        <dl class="result-list">
-          <div>
-            <dt>Clase predicha</dt>
-            <dd id="result-class">-</dd>
-          </div>
-          <div>
-            <dt>Texto limpio</dt>
-            <dd id="result-clean">-</dd>
-          </div>
-          <div>
-            <dt>Ruta del modelo</dt>
-            <dd id="result-path">-</dd>
-          </div>
-        </dl>
-      </section>
-    </aside>
   </main>
 
   <script src="./presentacion.js" defer></script>

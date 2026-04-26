@@ -23,10 +23,15 @@ runs/
 
 # Tooling
 .pytest_cache/
+.pytest_tmp/
 .mypy_cache/
 .ruff_cache/
 .vscode/
 *.bak
+*.rej
+*.orig
+diff.patch
+tmp*/
 
 # OS
 .DS_Store

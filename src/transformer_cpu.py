@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+from src.artefactos_modelos import resolver_snapshot_transformer_local
 from src.configuracion_proyecto import (
     BATCH_SIZE_TRANSFORMER,
     EPOCHS_TRANSFORMER,
@@ -75,17 +76,51 @@ def _resolver_snapshot_local(nombre_modelo: str) -> Path | None:
     return snapshots[-1]
 
 
-def resolver_origen_tokenizador(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) -> tuple[str, bool]:
-    """Prioriza el snapshot local del tokenizador si existe."""
-    snapshot = _resolver_snapshot_local(nombre_modelo)
+def _resolver_snapshot_preferido(
+    nombre_modelo: str,
+    variante_artifacto: str | None = None,
+) -> Path | None:
+    """Prioriza snapshots del proyecto y luego el cache local de Hugging Face."""
+    if variante_artifacto is not None:
+        snapshot_proyecto = resolver_snapshot_transformer_local(variante_artifacto)
+        if snapshot_proyecto is not None:
+            return snapshot_proyecto
+
+    return _resolver_snapshot_local(nombre_modelo)
+
+
+def resolver_origen_tokenizador(
+    nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+    variante_artifacto: str | None = None,
+) -> tuple[str, bool]:
+    """Prioriza snapshots locales del proyecto y luego el cache del tokenizador."""
+    snapshot = _resolver_snapshot_preferido(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
     if snapshot and (snapshot / "tokenizer.json").exists():
         return str(snapshot), True
     return nombre_modelo, False
 
 
-def resolver_origen_modelo(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) -> tuple[str | None, bool]:
+def resolver_modo_offline_tokenizador(
+    modo_offline: bool | None = None,
+) -> bool:
+    """Define si la carga del tokenizador debe resolverse en modo offline estricto."""
+    if modo_offline is None:
+        return True
+    return modo_offline
+
+
+def resolver_origen_modelo(
+    nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+    variante_artifacto: str | None = None,
+) -> tuple[str | None, bool]:
     """Devuelve origen local del modelo solo si hay pesos disponibles."""
-    snapshot = _resolver_snapshot_local(nombre_modelo)
+    snapshot = _resolver_snapshot_preferido(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
     if snapshot is None:
         return None, False
 
@@ -94,12 +129,21 @@ def resolver_origen_modelo(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) -> tu
     return None, False
 
 
-def relevar_estado_modelo_local(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) -> pd.DataFrame:
+def relevar_estado_modelo_local(
+    nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+    variante_artifacto: str | None = None,
+) -> pd.DataFrame:
     """Resume si el tokenizador y los pesos del modelo estan disponibles offline."""
-    origen_tokenizador, tokenizador_local = resolver_origen_tokenizador(nombre_modelo)
-    origen_modelo, modelo_local = resolver_origen_modelo(nombre_modelo)
+    origen_tokenizador, tokenizador_local = resolver_origen_tokenizador(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
+    origen_modelo, modelo_local = resolver_origen_modelo(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
     estado = EstadoModeloLocal(
-        nombre_modelo=nombre_modelo,
+        nombre_modelo=variante_artifacto or nombre_modelo,
         tokenizador_disponible=tokenizador_local,
         pesos_modelo_disponibles=modelo_local,
         origen_tokenizador=origen_tokenizador if tokenizador_local else None,
@@ -110,9 +154,13 @@ def relevar_estado_modelo_local(nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER) 
 
 def construir_estado_contingencia_transformer(
     nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+    variante_artifacto: str | None = None,
 ) -> pd.DataFrame:
     """Resume el estado offline del transformer y la accion recomendada."""
-    estado = relevar_estado_modelo_local(nombre_modelo).iloc[0].to_dict()
+    estado = relevar_estado_modelo_local(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    ).iloc[0].to_dict()
     pesos_disponibles = bool(estado["pesos_modelo_disponibles"])
     tokenizador_disponible = bool(estado["tokenizador_disponible"])
 
@@ -148,12 +196,25 @@ def construir_estado_contingencia_transformer(
 
 def cargar_tokenizador_transformer(
     nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
+    modo_offline: bool | None = None,
+    variante_artifacto: str | None = None,
 ):
-    """Carga el tokenizador usando cache local si esta disponible."""
-    origen, es_local = resolver_origen_tokenizador(nombre_modelo)
+    """Carga el tokenizador con politica de resolucion explicita."""
+    origen, es_local = resolver_origen_tokenizador(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
+    offline_estricto = resolver_modo_offline_tokenizador(modo_offline)
+
+    if offline_estricto and not es_local:
+        raise FileNotFoundError(
+            "No hay tokenizador local del transformer y el proyecto esta en modo offline estricto. "
+            "Carga primero el snapshot local o usa `modo_offline=False` para permitir resolucion remota."
+        )
+
     return AutoTokenizer.from_pretrained(
         origen,
-        local_files_only=es_local,
+        local_files_only=offline_estricto or es_local,
         fix_mistral_regex=True,
     )
 
@@ -173,9 +234,13 @@ def cargar_modelo_transformer_para_clasificacion(
     nombre_modelo: str = NOMBRE_MODELO_TRANSFORMER,
     etiqueta_a_id: dict[str, int] | None = None,
     id_a_etiqueta: dict[int, str] | None = None,
+    variante_artifacto: str | None = None,
 ):
     """Carga un modelo de clasificacion solo si hay pesos disponibles offline."""
-    origen_modelo, es_local = resolver_origen_modelo(nombre_modelo)
+    origen_modelo, es_local = resolver_origen_modelo(
+        nombre_modelo,
+        variante_artifacto=variante_artifacto,
+    )
     if not es_local or origen_modelo is None:
         raise FileNotFoundError(
             "No hay pesos locales del transformer. Tokenizador disponible, pero faltan model.safetensors o pytorch_model.bin."

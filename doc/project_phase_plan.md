@@ -7,7 +7,7 @@
 - Fase 2: implementada con limpieza compartida y validaciones
 - Fase 3: implementada para SVM; falta consolidar resultados finales para informe
 - Fase 4: preparada en codigo y notebook; bloqueada offline por ausencia de pesos locales del modelo
-- Fase 5: mini-API SVM disponible; comparativa final pendiente de correr el transformer
+- Fase 5: benchmark final corrido en CPU; mini-API alineada con el mejor modelo censurado y comparativa completa disponible
 
 ## Parametros congelados del proyecto
 
@@ -103,7 +103,7 @@
 - matriz de confusion
 - analisis de errores, con foco en `PH`
 - tabla comparativa final bajo un mismo esquema de metricas
-- mini-API local del baseline SVM (`src/api_local.py`)
+- mini-API local del mejor modelo censurado medido en CPU (`src/api_local.py`)
 
 **Criterio de cierre:**
 - hay conclusiones tecnicas defendibles
